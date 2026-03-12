@@ -1,0 +1,21 @@
+{
+  "agents": "Agents",
+  "switchAgent": "Switch Agent",
+  "manager": "Project Manager",
+  "architect": "Architect",
+  "developer": "Developer",
+  "qa": "QA Engineer",
+  "designer": "UI/UX Designer",
+  "security": "Security Expert",
+  "writer": "Technical Writer",
+  "workflows": "Workflows",
+  "runWorkflow": "Run Workflow",
+  "newFeature": "New Feature",
+  "bugFix": "Bug Fix",
+  "codeReview": "Code Review",
+  "release": "Release",
+  "workflowRunning": "Workflow running...",
+  "workflowComplete": "Workflow completed",
+  "workflowFailed": "Workflow failed",
+  "step": "Step {{current}} of {{total}}"
+}

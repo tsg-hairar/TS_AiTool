@@ -1,0 +1,215 @@
+/* ===================================================
+   Global Styles — סגנונות גלובליים
+   ===================================================
+   Tailwind CSS + סגנונות מותאמים ל-VS Code Webview
+   =================================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -------------------------------------------------
+   בסיס — התאמה ל-VS Code
+   ------------------------------------------------- */
+:root {
+  font-family: 'Heebo', var(--vscode-font-family), Arial, sans-serif;
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  direction: rtl;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------------------------------
+   סרגלי גלילה מותאמים
+   ------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* -------------------------------------------------
+   קוד — הדגשת syntax
+   ------------------------------------------------- */
+pre {
+  background: var(--vscode-textCodeBlock-background, rgba(0, 0, 0, 0.2));
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  direction: ltr;
+  text-align: left;
+  font-family: var(--vscode-editor-font-family, 'Consolas', monospace);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+code {
+  font-family: var(--vscode-editor-font-family, 'Consolas', monospace);
+  font-size: 0.9em;
+}
+
+/* Inline code */
+:not(pre) > code {
+  background: var(--vscode-textCodeBlock-background, rgba(0, 0, 0, 0.2));
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* -------------------------------------------------
+   אנימציות
+   ------------------------------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseDot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* נקודות טעינה (thinking animation) */
+.thinking-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vscode-editor-foreground);
+  margin: 0 2px;
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* -------------------------------------------------
+   Markdown Rendering
+   ------------------------------------------------- */
+.markdown-content h1 { font-size: 1.5em; font-weight: 700; margin: 16px 0 8px; }
+.markdown-content h2 { font-size: 1.3em; font-weight: 600; margin: 14px 0 6px; }
+.markdown-content h3 { font-size: 1.1em; font-weight: 600; margin: 12px 0 4px; }
+.markdown-content p { margin: 8px 0; line-height: 1.6; }
+.markdown-content ul, .markdown-content ol { padding-right: 20px; margin: 8px 0; }
+.markdown-content li { margin: 4px 0; }
+.markdown-content blockquote {
+  border-right: 3px solid var(--vscode-textLink-foreground);
+  padding-right: 12px;
+  margin: 8px 0;
+  opacity: 0.8;
+}
+.markdown-content a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+.markdown-content th, .markdown-content td {
+  border: 1px solid var(--vscode-panel-border);
+  padding: 6px 10px;
+  text-align: right;
+}
+.markdown-content th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------
+   כפתורים — סגנון VS Code
+   ------------------------------------------------- */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors;
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+  }
+  .btn-primary:hover {
+    background: var(--vscode-button-hoverBackground);
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors;
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+  }
+  .btn-secondary:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+  }
+
+  .btn-ghost {
+    @apply px-3 py-1.5 rounded-md text-sm transition-colors;
+    color: var(--vscode-editor-foreground);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* שדה קלט */
+  .input-field {
+    @apply w-full px-3 py-2 rounded-md text-sm outline-none;
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+  }
+  .input-field:focus {
+    border-color: var(--vscode-focusBorder);
+  }
+
+  /* כרטיס */
+  .card {
+    @apply rounded-lg p-4 transition-all;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--vscode-panel-border, rgba(255, 255, 255, 0.1));
+  }
+  .card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--vscode-focusBorder);
+  }
+}

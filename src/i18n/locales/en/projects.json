@@ -1,0 +1,14 @@
+{
+  "myProjects": "My Projects",
+  "newProject": "New Project",
+  "importProject": "Import Project from Folder",
+  "noProjects": "No projects yet",
+  "noProjectsDesc": "Add your first project to start working with AI agents",
+  "projectCount": "{{count}} projects",
+  "chats": "chats",
+  "updated": "Updated",
+  "healthScore": "Health Score",
+  "techStack": "Tech Stack",
+  "deleteConfirm": "Delete this project?",
+  "deleteNote": "This only removes the project from the list, not from disk"
+}

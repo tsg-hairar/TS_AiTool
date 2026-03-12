@@ -1,0 +1,21 @@
+{
+  "agents": "סוכנים",
+  "switchAgent": "החלפת סוכן",
+  "manager": "מנהל פרויקט",
+  "architect": "ארכיטקט",
+  "developer": "מפתח",
+  "qa": "בודק איכות",
+  "designer": "מעצב UI/UX",
+  "security": "מומחה אבטחה",
+  "writer": "כותב תיעוד",
+  "workflows": "תהליכי עבודה",
+  "runWorkflow": "הרצת Workflow",
+  "newFeature": "פיצ'ר חדש",
+  "bugFix": "תיקון באג",
+  "codeReview": "סקירת קוד",
+  "release": "שחרור גרסה",
+  "workflowRunning": "Workflow רץ...",
+  "workflowComplete": "Workflow הושלם",
+  "workflowFailed": "Workflow נכשל",
+  "step": "שלב {{current}} מתוך {{total}}"
+}

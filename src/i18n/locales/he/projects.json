@@ -1,0 +1,14 @@
+{
+  "myProjects": "הפרויקטים שלי",
+  "newProject": "פרויקט חדש",
+  "importProject": "ייבוא פרויקט מתיקייה",
+  "noProjects": "אין פרויקטים עדיין",
+  "noProjectsDesc": "הוסף את הפרויקט הראשון שלך כדי להתחיל לעבוד עם סוכני AI",
+  "projectCount": "{{count}} פרויקטים",
+  "chats": "שיחות",
+  "updated": "עודכן",
+  "healthScore": "ציון בריאות",
+  "techStack": "טכנולוגיות",
+  "deleteConfirm": "האם למחוק את הפרויקט?",
+  "deleteNote": "המחיקה מסירה רק את הפרויקט מהרשימה, לא מהדיסק"
+}
