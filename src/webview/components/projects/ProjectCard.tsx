@@ -5,7 +5,9 @@
 // ===================================================
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Project } from '../../../shared/types';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 
 interface ProjectCardProps {
   project: Project;
@@ -15,7 +17,9 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCardProps) {
+  const { t, i18n } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // חישוב צבע ציון הבריאות
   const healthColor =
@@ -25,7 +29,9 @@ export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCar
 
   return (
     <div
-      className="card cursor-pointer group animate-fade-in"
+      role="article"
+      aria-label={t('projects.projectAria', { name: project.name })}
+      className="card cursor-pointer group"
       onClick={onOpen}
       style={{ borderRightColor: project.color, borderRightWidth: 3 }}
     >
@@ -64,8 +70,8 @@ export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCar
 
           {/* סטטיסטיקות */}
           <div className="flex items-center gap-3 text-[10px] opacity-50">
-            <span>{project.chatCount} שיחות</span>
-            <span>עודכן {formatDate(project.lastOpenedAt)}</span>
+            <span>{project.chatCount} {t('projects.conversations')}</span>
+            <span>{t('projects.updatedAt', { date: formatDate(project.lastOpenedAt, t, i18n.language) })}</span>
           </div>
         </div>
 
@@ -89,40 +95,62 @@ export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCar
                 e.stopPropagation();
                 setShowMenu(!showMenu);
               }}
+              aria-label={t('projects.projectMenu')}
+              aria-haspopup="true"
+              aria-expanded={showMenu}
             >
               ⋮
             </button>
 
             {showMenu && (
               <div
-                className="absolute left-0 top-full mt-1 rounded-md shadow-lg py-1 z-10"
+                role="menu"
+                aria-label={t('projects.projectActions')}
+                className="absolute left-0 top-full mt-1 rounded-md shadow-lg py-1 z-10 menu-enter"
                 style={{ background: 'var(--vscode-input-background)' }}
               >
                 <button
-                  className="block w-full text-right px-3 py-1 text-xs hover:bg-white/10"
+                  role="menuitem"
+                  className="block w-full text-right px-3 py-1 text-xs hover:bg-white/10 transition-smooth"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRefresh();
                     setShowMenu(false);
                   }}
                 >
-                  🔄 רענון
+                  {t('projects.refresh')}
                 </button>
                 <button
-                  className="block w-full text-right px-3 py-1 text-xs hover:bg-white/10 text-red-400"
+                  role="menuitem"
+                  className="block w-full text-right px-3 py-1 text-xs hover:bg-white/10 text-red-400 transition-smooth"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDelete();
+                    setShowDeleteConfirm(true);
                     setShowMenu(false);
                   }}
                 >
-                  🗑️ מחיקה
+                  {t('projects.delete')}
                 </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* דיאלוג אישור מחיקה */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title={t('projects.deleteConfirmTitle')}
+        message={t('projects.deleteConfirmMessage', { name: project.name })}
+        confirmLabel={t('projects.deleteLabel')}
+        cancelLabel={t('projects.cancelLabel')}
+        variant="danger"
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          onDelete();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }
@@ -130,7 +158,7 @@ export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCar
 // -------------------------------------------------
 // formatDate — עיצוב תאריך יחסי
 // -------------------------------------------------
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, t: (key: string, opts?: any) => string, lang: string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -138,9 +166,9 @@ function formatDate(dateStr: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'עכשיו';
-  if (diffMins < 60) return `לפני ${diffMins} דקות`;
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  if (diffDays < 7) return `לפני ${diffDays} ימים`;
-  return date.toLocaleDateString('he-IL');
+  if (diffMins < 1) return t('projects.now');
+  if (diffMins < 60) return t('projects.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return t('projects.hoursAgo', { count: diffHours });
+  if (diffDays < 7) return t('projects.daysAgo', { count: diffDays });
+  return date.toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-US');
 }

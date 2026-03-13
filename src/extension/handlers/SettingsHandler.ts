@@ -12,14 +12,19 @@ export class SettingsHandler {
     private readonly postMessage: (msg: ExtensionToWebviewMessage) => void,
   ) {}
 
-  public getSettings(): void {
-    const settings = this.settingsService.getSettings();
+  public async getSettings(): Promise<void> {
+    const settings = await this.settingsService.getSettingsAsync();
     this.postMessage({ type: 'settingsLoaded', payload: settings });
   }
 
   public async updateSettings(updates: Partial<UserSettings>): Promise<void> {
     await this.settingsService.updateSettings(updates);
-    this.getSettings(); // שליחת ההגדרות המעודכנות ל-UI
+    await this.getSettings(); // שליחת ההגדרות המעודכנות ל-UI
+  }
+
+  public async storeApiKey(apiKey: string): Promise<void> {
+    await this.settingsService.storeApiKey(apiKey);
+    await this.getSettings(); // refresh hasApiKey in UI
   }
 
   public async switchModel(model: ModelId): Promise<void> {

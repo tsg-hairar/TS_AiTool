@@ -28,8 +28,12 @@ export default defineConfig({
       output: {
         // שם קובץ הפלט — בלי hash כי VS Code צריך נתיב קבוע
         entryFileNames: 'index.js',
-        chunkFileNames: 'chunks/[name].js',
         assetFileNames: 'assets/[name].[ext]',
+        // --- ביטול code splitting ---
+        // VS Code webview + CSP חוסם dynamic imports
+        // הכל בקובץ אחד = לא צריך chunks ולא strict-dynamic
+        manualChunks: undefined,
+        inlineDynamicImports: true,
       },
     },
 

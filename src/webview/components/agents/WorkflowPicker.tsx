@@ -5,14 +5,18 @@
 // המשתמש בוחר workflow, מזין קלט, ומריץ
 // ===================================================
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../../state/AppContext';
 import type { Workflow } from '../../../shared/types';
 
 export function WorkflowPicker() {
   const { state, dispatch, sendMessage } = useApp();
+  const { t } = useTranslation();
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [input, setInput] = useState('');
+
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   if (!state.workflowPickerOpen) return null;
 
@@ -33,11 +37,45 @@ export function WorkflowPicker() {
     close();
   };
 
+  // --- Focus trap for dialog ---
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      close();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable || focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-backdrop-in" role="presentation">
       <div
-        className="w-96 max-w-[90vw] rounded-lg shadow-xl"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('workflow.title')}
+        className="w-96 max-w-[90vw] rounded-lg shadow-xl animate-dialog-in"
         style={{ background: 'var(--vscode-editor-background)', border: '1px solid var(--vscode-panel-border)' }}
+        onKeyDown={handleKeyDown}
       >
         {/* כותרת */}
         <div
@@ -45,9 +83,9 @@ export function WorkflowPicker() {
           style={{ borderColor: 'var(--vscode-panel-border)' }}
         >
           <h3 className="text-sm font-semibold" style={{ color: 'var(--vscode-foreground)' }}>
-            ⚡ בחירת Workflow
+            {t('workflow.title')}
           </h3>
-          <button className="text-lg opacity-50 hover:opacity-100" onClick={close}>
+          <button className="text-lg opacity-50 hover:opacity-100" onClick={close} aria-label={t('workflow.closeDialog')}>
             ✕
           </button>
         </div>
@@ -59,12 +97,13 @@ export function WorkflowPicker() {
               {state.workflows.map((wf) => (
                 <button
                   key={wf.id}
-                  className="w-full text-start px-3 py-2.5 rounded-lg transition-all hover:opacity-90"
+                  className="w-full text-start px-3 py-2.5 rounded-lg transition-smooth hover-lift hover:opacity-90"
                   style={{
                     background: 'var(--vscode-list-hoverBackground)',
                     border: '1px solid var(--vscode-panel-border)',
                   }}
                   onClick={() => setSelectedWorkflow(wf)}
+                  aria-label={`${wf.name} — ${wf.description}`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span>{wf.icon}</span>
@@ -86,7 +125,7 @@ export function WorkflowPicker() {
                           {step.agentId}
                         </span>
                         {i < wf.steps.length - 1 && (
-                          <span className="text-[10px] opacity-40">→</span>
+                          <span className="text-[10px] opacity-40">{'\u2192'}</span>
                         )}
                       </React.Fragment>
                     ))}
@@ -103,8 +142,9 @@ export function WorkflowPicker() {
                 <button
                   className="text-xs opacity-50 hover:opacity-100 mr-auto"
                   onClick={() => setSelectedWorkflow(null)}
+                  aria-label={t('workflow.backToList')}
                 >
-                  ← חזרה
+                  {'\u2190'} {t('workflow.back')}
                 </button>
               </div>
 
@@ -120,7 +160,8 @@ export function WorkflowPicker() {
                   border: '1px solid var(--vscode-input-border)',
                 }}
                 rows={3}
-                placeholder="תאר את המשימה..."
+                aria-label={t('workflow.taskDescription')}
+                placeholder={t('workflow.taskPlaceholder')}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -133,17 +174,17 @@ export function WorkflowPicker() {
 
               <div className="flex justify-end gap-2 mt-3">
                 <button
-                  className="px-3 py-1.5 text-xs rounded"
+                  className="px-3 py-1.5 text-xs rounded transition-smooth click-shrink"
                   style={{
                     background: 'var(--vscode-button-secondaryBackground)',
                     color: 'var(--vscode-button-secondaryForeground)',
                   }}
                   onClick={close}
                 >
-                  ביטול
+                  {t('workflow.cancel')}
                 </button>
                 <button
-                  className="px-3 py-1.5 text-xs rounded font-medium"
+                  className="px-3 py-1.5 text-xs rounded font-medium transition-smooth click-shrink"
                   style={{
                     background: 'var(--vscode-button-background)',
                     color: 'var(--vscode-button-foreground)',
@@ -152,7 +193,7 @@ export function WorkflowPicker() {
                   disabled={!input.trim()}
                   onClick={run}
                 >
-                  ⚡ הרצה
+                  {t('workflow.run')}
                 </button>
               </div>
             </div>
@@ -166,16 +207,17 @@ export function WorkflowPicker() {
             style={{ borderColor: 'var(--vscode-panel-border)' }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <span className="animate-spin text-sm">⏳</span>
+              <span className="animate-spin text-sm">{'\u23F3'}</span>
               <span className="text-xs font-medium">
-                שלב {state.workflowRun.currentStep + 1} רץ...
+                {t('workflow.stepRunning', { step: state.workflowRun.currentStep + 1 })}
               </span>
             </div>
             <button
               className="text-xs text-red-400 hover:text-red-300"
               onClick={() => sendMessage({ type: 'cancelWorkflow' })}
+              aria-label={t('workflow.cancelWorkflow')}
             >
-              ❌ ביטול Workflow
+              {t('workflow.cancelWorkflow')}
             </button>
           </div>
         )}

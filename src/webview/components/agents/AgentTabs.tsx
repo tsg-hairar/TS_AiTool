@@ -6,17 +6,53 @@
 // ===================================================
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../../state/AppContext';
+
+/**
+ * Convert a hex color string to an "r,g,b" string for use in rgba().
+ * Handles 3-digit (#abc), 6-digit (#aabbcc), with or without leading #.
+ * Returns "255,255,255" as fallback for invalid values.
+ */
+function hexToRgb(hex: string): string {
+  try {
+    let h = hex.replace(/^#/, '');
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(h)) {
+      return '255,255,255';
+    }
+    // Expand 3-digit hex to 6-digit
+    if (h.length === 3) {
+      h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    }
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+      return '255,255,255';
+    }
+    return `${r},${g},${b}`;
+  } catch {
+    return '255,255,255';
+  }
+}
 
 export function AgentTabs() {
   const { state, dispatch, sendMessage } = useApp();
+  const { t } = useTranslation();
 
   if (state.agents.length === 0) return null;
 
   return (
     <div
-      className="flex items-center gap-0.5 px-2 py-1.5 overflow-x-auto border-b"
-      style={{ borderColor: 'var(--vscode-panel-border)' }}
+      role="tablist"
+      aria-label={t('agents.selectAgent')}
+      className="flex items-center gap-1 ps-2 pe-2 py-1.5 overflow-x-auto border-b"
+      style={{
+        borderColor: 'var(--vscode-panel-border)',
+        background: 'rgba(30, 30, 30, 0.5)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+      }}
     >
       {state.agents.map((agent) => {
         const isActive = agent.id === state.activeAgentId;
@@ -24,13 +60,29 @@ export function AgentTabs() {
         return (
           <button
             key={agent.id}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition-all whitespace-nowrap ${
-              isActive ? 'font-medium' : 'opacity-50 hover:opacity-80'
+            role="tab"
+            aria-selected={isActive}
+            aria-label={`${agent.name} — ${agent.description}`}
+            className={`flex items-center gap-1.5 ps-2.5 pe-2.5 py-1.5 rounded-md text-xs whitespace-nowrap click-shrink transition-all duration-250 ${
+              isActive
+                ? 'font-medium animate-bounce-subtle'
+                : 'opacity-50 hover:opacity-80 hover:scale-[1.02]'
             }`}
             style={{
-              background: isActive ? `${agent.color}20` : 'transparent',
+              background: isActive
+                ? `rgba(${hexToRgb(agent.color)}, 0.12)`
+                : 'rgba(255,255,255,0.03)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: isActive
+                ? `1px solid ${agent.color}40`
+                : '1px solid rgba(255,255,255,0.04)',
               borderBottom: isActive ? `2px solid ${agent.color}` : '2px solid transparent',
               color: isActive ? agent.color : undefined,
+              boxShadow: isActive
+                ? `0 0 12px ${agent.color}25, 0 0 4px ${agent.color}15`
+                : 'none',
+              transition: 'all 0.25s ease, transform 0.15s ease',
             }}
             onClick={() =>
               sendMessage({ type: 'switchAgent', payload: { agentId: agent.id } })
@@ -44,13 +96,19 @@ export function AgentTabs() {
       })}
 
       {/* Workflow כפתור */}
-      <div className="mr-auto">
+      <div className="ms-auto">
         <button
-          className="btn-ghost text-[10px] opacity-40 hover:opacity-100"
-          title="הרצת Workflow"
+          className="text-[10px] ps-3 pe-3 py-1 rounded-md font-medium opacity-60 hover:opacity-100 transition-all duration-200 hover:scale-[1.02]"
+          style={{
+            background: 'var(--gradient-primary)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'white',
+          }}
+          title={t('agents.runWorkflow')}
+          aria-label={t('agents.runWorkflow')}
           onClick={() => dispatch({ type: 'TOGGLE_WORKFLOW_PICKER' })}
         >
-          ⚡ Workflow
+          {t('agents.workflow')}
         </button>
       </div>
     </div>

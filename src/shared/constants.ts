@@ -2,11 +2,14 @@
 // Constants — קבועים משותפים
 // ===================================================
 
-import type { Agent, AgentId, ModelInfo, Workflow, QuickAction, Skill } from './types';
+import type { Agent, AgentId, ModelId, ModelInfo, Workflow, QuickAction, Skill, PromptTemplate } from './types';
 
 // -------------------------------------------------
 // מודלים זמינים
 // -------------------------------------------------
+
+/** מודל ברירת מחדל */
+export const DEFAULT_MODEL_ID: ModelId = 'claude-sonnet-4-20250514';
 
 export const MODELS: Record<string, ModelInfo> = {
   'claude-sonnet-4-20250514': {
@@ -33,6 +36,18 @@ export const MODELS: Record<string, ModelInfo> = {
     costPer1kInput: 0.001,
     costPer1kOutput: 0.005,
   },
+};
+
+/** תמחור מודלים — מקור אמת יחיד (נגזר מ-MODELS) */
+export const MODEL_PRICING: Record<string, { input: number; output: number }> = Object.fromEntries(
+  Object.values(MODELS).map((m) => [m.id, { input: m.costPer1kInput, output: m.costPer1kOutput }]),
+);
+
+/** מיפוי שמות קצרים למזהי מודל */
+export const MODEL_ALIASES: Record<string, ModelId> = {
+  sonnet: 'claude-sonnet-4-20250514',
+  opus: 'claude-opus-4-20250514',
+  haiku: 'claude-haiku-4-5-20251001',
 };
 
 // -------------------------------------------------
@@ -378,6 +393,113 @@ export const BUILT_IN_SKILLS: Skill[] = [
 ];
 
 // -------------------------------------------------
+// Prompt Templates מובנים — 10 תבניות פרומפט
+// -------------------------------------------------
+
+export const BUILT_IN_PROMPT_TEMPLATES: PromptTemplate[] = [
+  {
+    id: 'builtin-code-review',
+    title: 'בדוק קוד',
+    content: 'בצע סקירת קוד מקיפה לקוד הבא. בדוק סגנון, ביצועים, אבטחה, וטיפול בשגיאות.\n\n{{code}}',
+    category: 'review',
+    icon: '🔍',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-explain-code',
+    title: 'הסבר קוד',
+    content: 'הסבר את הקוד הבא בפירוט. תאר מה כל חלק עושה, את זרימת הנתונים, ואת דפוסי העיצוב שנמצאים בשימוש.\n\n{{code}}',
+    category: 'code',
+    icon: '💡',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-find-bugs',
+    title: 'מצא באגים',
+    content: 'נתח את הקוד הבא ומצא באגים פוטנציאליים, מקרי קצה, ובעיות לוגיות. הצע תיקונים לכל בעיה שנמצאה.\n\n{{code}}',
+    category: 'debug',
+    icon: '🐛',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-write-tests',
+    title: 'כתוב טסטים',
+    content: 'כתוב טסטים מקיפים (unit tests) עבור הקוד הבא. כלול מקרי קצה, תרחישי שגיאה, ותרחישים חיוביים.\n\n{{code}}',
+    category: 'code',
+    icon: '🧪',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-optimize',
+    title: 'שפר ביצועים',
+    content: 'נתח את הקוד הבא מבחינת ביצועים. מצא צווארי בקבוק, דליפות זיכרון, ופעולות לא יעילות. הצע שיפורים קונקרטיים.\n\n{{code}}',
+    category: 'code',
+    icon: '⚡',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-document',
+    title: 'תעד קוד',
+    content: 'הוסף תיעוד מקיף לקוד הבא. כלול JSDoc/TSDoc comments, הסברים לפרמטרים, ודוגמאות שימוש.\n\n{{code}}',
+    category: 'code',
+    icon: '📝',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-refactor',
+    title: 'רפקטור',
+    content: 'בצע רפקטור לקוד הבא. שפר את הקריאות, הפרד אחריויות, ויישם דפוסי עיצוב מתאימים. שמור על התנהגות זהה.\n\n{{code}}',
+    category: 'code',
+    icon: '♻️',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-security-check',
+    title: 'בדוק אבטחה',
+    content: 'בצע סקירת אבטחה מקיפה לקוד הבא. בדוק OWASP Top 10, הזרקות, XSS, CSRF, סודות חשופים, ובעיות הרשאות.\n\n{{code}}',
+    category: 'security',
+    icon: '🔒',
+    variables: ['code'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-convert-language',
+    title: 'המר שפה',
+    content: 'המר את הקוד הבא מ-{{language}} ל-{{targetLanguage}}. שמור על הלוגיקה והמבנה, והשתמש בקונבנציות של שפת היעד.\n\n{{code}}',
+    category: 'code',
+    icon: '🔄',
+    variables: ['code', 'language', 'targetLanguage'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-write-readme',
+    title: 'כתוב README',
+    content: 'כתוב קובץ README.md מקיף עבור הפרויקט בנתיב {{file}}. כלול: תיאור, התקנה, שימוש, API, תרומה, ורישיון.',
+    category: 'general',
+    icon: '📄',
+    variables: ['file'],
+    isBuiltIn: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  },
+];
+
+// -------------------------------------------------
 // Limits
 // -------------------------------------------------
 
@@ -396,4 +518,36 @@ export const LIMITS = {
   MAX_TEMPLATES: 100,
   /** גודל מקסימלי של תמונה (5MB) */
   MAX_IMAGE_SIZE: 5 * 1024 * 1024,
+} as const;
+
+// -------------------------------------------------
+// Timeouts (ms) — ריכוז כל ערכי ה-timeout
+// -------------------------------------------------
+
+export const TIMEOUTS = {
+  // --- CLI / Network ---
+  /** CLI idle timeout — no output for this duration triggers abort (5 min) */
+  CLI_IDLE_MS: 300_000,
+  /** Timeout for `which node` / `where node` subprocess (5s) */
+  NODE_LOOKUP_MS: 5_000,
+  /** Max tool-use turns before stopping the conversation loop */
+  MAX_TOOL_TURNS: 10,
+  /** Response cache TTL (1 hour) */
+  RESPONSE_CACHE_TTL_MS: 60 * 60 * 1000,
+
+  // --- UI Feedback ---
+  /** Duration to show transient UI feedback (copy, retry, etc.) */
+  UI_FEEDBACK_MS: 2_000,
+  /** Draft save debounce interval */
+  DRAFT_SAVE_DEBOUNCE_MS: 3_000,
+  /** Search input debounce */
+  SEARCH_DEBOUNCE_MS: 300,
+  /** Focus delay after dialog/modal open */
+  FOCUS_DELAY_MS: 50,
+  /** Loading skeleton fallback timeout */
+  LOADING_FALLBACK_MS: 1_500,
+  /** Onboarding test connection simulated delay */
+  TEST_CONNECTION_MS: 2_000,
+  /** Onboarding test status reset delay */
+  TEST_STATUS_RESET_MS: 3_000,
 } as const;

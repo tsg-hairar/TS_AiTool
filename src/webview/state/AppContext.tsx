@@ -59,6 +59,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // -------------------------------------------------
+  // זיהוי מצב אופליין — navigator.onLine + אירועים
+  // -------------------------------------------------
+  useEffect(() => {
+    // עדכון ראשוני
+    dispatch({ type: 'SET_OFFLINE', payload: !navigator.onLine });
+
+    const goOffline = () => dispatch({ type: 'SET_OFFLINE', payload: true });
+    const goOnline = () => {
+      dispatch({ type: 'SET_OFFLINE', payload: false });
+      // כשחוזר אונליין — שולחים הודעות שבתור
+      // (ה-ChatPanel ידאג לשלוח מחדש)
+    };
+
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, []);
+
+  // -------------------------------------------------
   // האזנה להודעות מה-Extension
   // -------------------------------------------------
   useEffect(() => {
@@ -135,6 +157,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         case 'gitDiff':
           dispatch({ type: 'SET_FILE_DIFFS', payload: message.payload });
           break;
+        case 'diffContent':
+          dispatch({ type: 'SET_DIFF_CONTENT', payload: message.payload });
+          break;
 
         // --- Skills ---
         case 'skillList':
@@ -178,12 +203,47 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'SET_TIMELINE', payload: message.payload });
           break;
 
+        // --- חיפוש ---
+        case 'searchResults':
+          // התוצאות מגיעות מה-Extension — מעדכנים את ה-state
+          // (בפועל החיפוש המקומי בשיחה הנוכחית מתבצע ב-ChatPanel)
+          break;
+
         // --- Tool Permissions ---
         case 'toolPermissionRequest':
           dispatch({ type: 'ADD_TOOL_PERMISSION', payload: message.payload });
           break;
         case 'toolResult':
           dispatch({ type: 'REMOVE_TOOL_PERMISSION', payload: message.payload.toolUseId });
+          break;
+
+        // --- Onboarding ---
+        case 'onboardingStatus':
+          if (message.payload.completed) {
+            dispatch({ type: 'SET_ONBOARDING_SEEN', payload: true });
+          }
+          break;
+
+        // --- שמירה אוטומטית ושחזור מושב ---
+        case 'draftLoaded':
+          dispatch({ type: 'SET_DRAFT', payload: message.payload });
+          break;
+        case 'autoSaveStatus':
+          dispatch({ type: 'SET_AUTO_SAVE', payload: { timestamp: message.payload.timestamp } });
+          // הסתרת אינדיקטור שמירה אחרי 2 שניות
+          setTimeout(() => {
+            dispatch({ type: 'HIDE_SAVE_INDICATOR' });
+          }, 2_000);
+          break;
+        case 'sessionRestored':
+          dispatch({
+            type: 'SET_SESSION_RESTORED',
+            payload: { scrollPosition: message.payload.scrollPosition },
+          });
+          // ניקוי דגל שחזור אחרי 3 שניות
+          setTimeout(() => {
+            dispatch({ type: 'CLEAR_SESSION_RESTORED' });
+          }, 3_000);
           break;
       }
     }

@@ -1,0 +1,244 @@
+{
+  "app": {
+    "name": "TS AiTool",
+    "skillsComingSoon": "Skills Marketplace — Coming Soon"
+  },
+
+  "errorBoundary": {
+    "projectsDashboard": "An error occurred while loading the projects dashboard. Try refreshing.",
+    "chat": "An error occurred while loading the chat. Try refreshing.",
+    "settings": "An error occurred while loading settings. Try refreshing.",
+    "title": "Something went wrong",
+    "retry": "Try again",
+    "showDetails": "Show details ▼",
+    "hideDetails": "Hide details ▲"
+  },
+
+  "toolbar": {
+    "ariaLabel": "Main toolbar",
+    "backToProjects": "Back to projects",
+    "newChat": "New chat",
+    "clearChat": "Clear chat",
+    "search": "Search",
+    "exportChat": "Export chat",
+    "keyboardShortcuts": "Keyboard shortcuts",
+    "settings": "Settings",
+    "clearChatConfirmTitle": "Clear Chat",
+    "clearChatConfirmMessage": "Are you sure you want to clear all chat history?",
+    "clearChatConfirmLabel": "Clear",
+    "cancel": "Cancel"
+  },
+
+  "chat": {
+    "ariaLabel": "Chat messages",
+    "writingResponse": "Writing response",
+    "processing": "Processing",
+    "writingResponseEllipsis": "Writing response...",
+    "processingEllipsis": "Processing...",
+    "connecting": "Connecting...",
+    "analyzing": "Analyzing...",
+    "thinking": "Thinking...",
+    "stillWorking": "Still working...",
+    "thinkingWithTimer": "Thinking...",
+    "pinnedMessages": "Pinned messages",
+    "defaultChatName": "Chat",
+    "sendToStart": "Send a message to get started",
+    "retryLabel": "Retry",
+    "errorHintNetwork": "Check your internet connection",
+    "errorHintApi": "Check your API key in settings",
+    "errorHintTool": "Check tool permissions",
+    "errorCategoryNetwork": "Network error",
+    "errorCategoryApi": "API error",
+    "errorCategoryTool": "Tool error",
+    "errorCategoryUnknown": "Error",
+    "closeError": "Close",
+    "closeErrorAria": "Close error message",
+    "messageCounter": "Message {{current}} of {{total}}",
+    "lazyLoading": "Loading..."
+  },
+
+  "input": {
+    "ariaLabel": "Send message",
+    "chatAriaLabel": "Type a chat message",
+    "fileSizeLimit": "Maximum image size: 5MB",
+    "placeholderBusy": "Waiting for response...",
+    "placeholder": "Type a message... (/ for commands)",
+    "cancelRequest": "Cancel",
+    "cancelRequestAria": "Cancel request",
+    "send": "Send (Enter)",
+    "sendAria": "Send message",
+    "slashHint": "/help — Command list | /review — Code review | /fix — Fix bugs",
+    "removeImageAria": "Remove image {{index}}",
+    "imageTooLarge": "Image {{name}} is too large ({{size}}MB). Maximum 5MB."
+  },
+
+  "message": {
+    "you": "You",
+    "system": "System",
+    "ariaLabel": "Message from {{sender}} at {{time}}",
+    "writing": "Writing...",
+    "starting": "Starting...",
+    "copy": "Copy",
+    "copyAria": "Copy message",
+    "bookmarkAdd": "Bookmark",
+    "bookmarkRemove": "Remove bookmark",
+    "bookmarkAddAria": "Add bookmark",
+    "bookmarkRemoveAria": "Remove bookmark",
+    "pinAdd": "Pin",
+    "pinRemove": "Unpin",
+    "pinAddAria": "Pin message",
+    "pinRemoveAria": "Unpin message",
+    "tokens": "tokens"
+  },
+
+  "agents": {
+    "selectAgent": "Select agent",
+    "runWorkflow": "Run Workflow",
+    "workflow": "Workflow"
+  },
+
+  "workflow": {
+    "title": "Select Workflow",
+    "closeDialog": "Close dialog",
+    "back": "Back",
+    "backToList": "Back to Workflow list",
+    "taskDescription": "Task description",
+    "taskPlaceholder": "Describe the task...",
+    "cancel": "Cancel",
+    "run": "Run",
+    "stepRunning": "Step {{step}} running...",
+    "cancelWorkflow": "Cancel Workflow"
+  },
+
+  "projects": {
+    "title": "My Projects",
+    "loading": "Loading...",
+    "projectCount": "{{count}} projects",
+    "newProject": "New Project",
+    "emptyTitle": "No projects yet",
+    "emptyDescription": "Add your first project to start working with AI agents",
+    "importFromFolder": "Import project from folder",
+    "projectAria": "Project: {{name}}",
+    "conversations": "conversations",
+    "updatedAt": "Updated {{date}}",
+    "projectMenu": "Project menu",
+    "projectActions": "Project actions",
+    "refresh": "Refresh",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete Project",
+    "deleteConfirmMessage": "Are you sure you want to delete the project '{{name}}'?",
+    "deleteLabel": "Delete",
+    "cancelLabel": "Cancel",
+    "now": "now",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "daysAgo": "{{count}} days ago"
+  },
+
+  "settings": {
+    "title": "Settings",
+    "loadingSettings": "Loading settings...",
+    "claudeConnection": "Claude Connection",
+    "apiMode": "API Mode — Pay per token",
+    "cliMode": "CLI Mode — Via your subscription (no extra cost!)",
+    "apiKeyLabel": "API Key (leave empty for CLI/subscription mode)",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "aiModel": "AI Model",
+    "language": "Language",
+    "hebrew": "עברית",
+    "english": "English",
+    "toolPermissions": "Tool Permissions",
+    "permConservative": "Conservative — Approval for every action",
+    "permNormal": "Normal — Auto-read, writes require approval",
+    "permFull": "Full — Everything automatic (advanced)",
+    "learningMode": "Learning Mode",
+    "learningModeDesc": "Add detailed Hebrew comments to all code",
+    "maxTokens": "Max Tokens",
+    "maxTokensAria": "Max tokens",
+    "maxTokensValue": "{{count}} tokens",
+    "fontSize": "Font Size",
+    "fontSizeAria": "Font size",
+    "fontSizeValue": "{{size}} pixels",
+    "quickActions": "Quick Actions",
+    "quickActionsDesc": "Show quick actions in chat",
+    "sessionStats": "Session Statistics",
+    "statTokens": "Tokens",
+    "statCost": "Cost",
+    "statMessages": "Messages",
+    "statMode": "Mode",
+    "statCliSubscription": "CLI (Subscription)"
+  },
+
+  "toolPermission": {
+    "requestTitle": "Permission Request — {{tool}}",
+    "dangerWarning": "This tool can modify files or run commands",
+    "safeDescription": "Tool {{tool}} is requesting permission to run",
+    "noParams": "(no parameters)",
+    "deny": "Deny",
+    "approve": "Approve",
+    "denyAria": "Deny — {{tool}}",
+    "approveAria": "Approve — {{tool}}",
+    "tools": {
+      "read_file": "Read File",
+      "write_file": "Write File",
+      "edit_file": "Edit File",
+      "search_files": "Search Files",
+      "search_content": "Search Content",
+      "run_command": "Run Command",
+      "list_files": "List Files",
+      "web_search": "Web Search",
+      "web_fetch": "Fetch Web Page"
+    }
+  },
+
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "close": "Close",
+    "searchPlaceholder": "Search shortcut...",
+    "searchAria": "Search keyboard shortcuts",
+    "noResults": "No matching shortcuts found",
+    "pressEscToClose": "Press {{key}} to close",
+    "sections": {
+      "chat": "Chat",
+      "navigation": "Navigation",
+      "projects": "Projects",
+      "agents": "Agents",
+      "extra": "Extra"
+    },
+    "actions": {
+      "newChat": "New chat",
+      "sendMessage": "Send message",
+      "newLine": "New line in message",
+      "clearChat": "Clear chat",
+      "toggleQuickActions": "Show/hide quick actions",
+      "togglePanel": "Toggle panel",
+      "fullScreen": "Full screen",
+      "splitView": "Split view",
+      "runProject": "Run project",
+      "switchAgent": "Switch agent",
+      "voiceInput": "Voice input"
+    }
+  },
+
+  "confirm": {
+    "defaultConfirm": "Confirm",
+    "defaultCancel": "Cancel"
+  },
+
+  "retry": {
+    "defaultLabel": "Retry",
+    "retrying": "Retrying..."
+  },
+
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning"
+  }
+}

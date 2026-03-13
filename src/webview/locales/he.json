@@ -1,0 +1,244 @@
+{
+  "app": {
+    "name": "TS AiTool",
+    "skillsComingSoon": "Skills Marketplace — בקרוב"
+  },
+
+  "errorBoundary": {
+    "projectsDashboard": "אירעה שגיאה בטעינת דשבורד הפרויקטים. נסה לרענן.",
+    "chat": "אירעה שגיאה בטעינת הצ'אט. נסה לרענן.",
+    "settings": "אירעה שגיאה בטעינת ההגדרות. נסה לרענן.",
+    "title": "משהו השתבש",
+    "retry": "נסה שוב",
+    "showDetails": "הצג פרטים ▼",
+    "hideDetails": "הסתר פרטים ▲"
+  },
+
+  "toolbar": {
+    "ariaLabel": "סרגל כלים ראשי",
+    "backToProjects": "חזרה לפרויקטים",
+    "newChat": "צ'אט חדש",
+    "clearChat": "ניקוי שיחה",
+    "search": "חיפוש",
+    "exportChat": "ייצוא שיחה",
+    "keyboardShortcuts": "קיצורי מקלדת",
+    "settings": "הגדרות",
+    "clearChatConfirmTitle": "ניקוי שיחה",
+    "clearChatConfirmMessage": "האם לנקות את כל ההיסטוריה של השיחה?",
+    "clearChatConfirmLabel": "ניקוי",
+    "cancel": "ביטול"
+  },
+
+  "chat": {
+    "ariaLabel": "הודעות צ'אט",
+    "writingResponse": "כותב תגובה",
+    "processing": "מעבד",
+    "writingResponseEllipsis": "כותב תגובה...",
+    "processingEllipsis": "מעבד...",
+    "connecting": "מתחבר...",
+    "analyzing": "מנתח...",
+    "thinking": "חושב...",
+    "stillWorking": "עדיין עובד...",
+    "thinkingWithTimer": "חושב...",
+    "pinnedMessages": "הודעות מוצמדות",
+    "defaultChatName": "צ'אט",
+    "sendToStart": "שלח הודעה כדי להתחיל",
+    "retryLabel": "נסה שוב",
+    "errorHintNetwork": "בדוק את חיבור האינטרנט",
+    "errorHintApi": "בדוק את מפתח ה-API בהגדרות",
+    "errorHintTool": "בדוק הרשאות כלי",
+    "errorCategoryNetwork": "שגיאת רשת",
+    "errorCategoryApi": "שגיאת API",
+    "errorCategoryTool": "שגיאת כלי",
+    "errorCategoryUnknown": "שגיאה",
+    "closeError": "סגור",
+    "closeErrorAria": "סגור הודעת שגיאה",
+    "messageCounter": "הודעה {{current}} מתוך {{total}}",
+    "lazyLoading": "טוען..."
+  },
+
+  "input": {
+    "ariaLabel": "שליחת הודעה",
+    "chatAriaLabel": "הקלד הודעה לצ'אט",
+    "fileSizeLimit": "גודל מקסימלי לתמונה: 5MB",
+    "placeholderBusy": "ממתין לתגובה...",
+    "placeholder": "הקלד הודעה... (/ לפקודות)",
+    "cancelRequest": "ביטול",
+    "cancelRequestAria": "ביטול בקשה",
+    "send": "שלח (Enter)",
+    "sendAria": "שלח הודעה",
+    "slashHint": "/help — רשימת פקודות | /review — סקירת קוד | /fix — תיקון באגים",
+    "removeImageAria": "הסר תמונה {{index}}",
+    "imageTooLarge": "התמונה {{name}} גדולה מדי ({{size}}MB). מקסימום 5MB."
+  },
+
+  "message": {
+    "you": "אתה",
+    "system": "מערכת",
+    "ariaLabel": "הודעה מאת {{sender}} בשעה {{time}}",
+    "writing": "כותב...",
+    "starting": "מתחיל...",
+    "copy": "העתק",
+    "copyAria": "העתק הודעה",
+    "bookmarkAdd": "סמן",
+    "bookmarkRemove": "הסר סימנייה",
+    "bookmarkAddAria": "הוסף סימנייה",
+    "bookmarkRemoveAria": "הסר סימנייה",
+    "pinAdd": "הצמד",
+    "pinRemove": "בטל הצמדה",
+    "pinAddAria": "הצמד הודעה",
+    "pinRemoveAria": "בטל הצמדה",
+    "tokens": "tokens"
+  },
+
+  "agents": {
+    "selectAgent": "בחירת סוכן",
+    "runWorkflow": "הרצת Workflow",
+    "workflow": "Workflow"
+  },
+
+  "workflow": {
+    "title": "בחירת Workflow",
+    "closeDialog": "סגור דיאלוג",
+    "back": "חזרה",
+    "backToList": "חזרה לרשימת Workflows",
+    "taskDescription": "תיאור המשימה",
+    "taskPlaceholder": "תאר את המשימה...",
+    "cancel": "ביטול",
+    "run": "הרצה",
+    "stepRunning": "שלב {{step}} רץ...",
+    "cancelWorkflow": "ביטול Workflow"
+  },
+
+  "projects": {
+    "title": "הפרויקטים שלי",
+    "loading": "טוען...",
+    "projectCount": "{{count}} פרויקטים",
+    "newProject": "פרויקט חדש",
+    "emptyTitle": "אין פרויקטים עדיין",
+    "emptyDescription": "הוסף את הפרויקט הראשון שלך כדי להתחיל לעבוד עם סוכני AI",
+    "importFromFolder": "ייבוא פרויקט מתיקייה",
+    "projectAria": "פרויקט: {{name}}",
+    "conversations": "שיחות",
+    "updatedAt": "עודכן {{date}}",
+    "projectMenu": "תפריט פרויקט",
+    "projectActions": "פעולות פרויקט",
+    "refresh": "רענון",
+    "delete": "מחיקה",
+    "deleteConfirmTitle": "מחיקת פרויקט",
+    "deleteConfirmMessage": "האם אתה בטוח שברצונך למחוק את הפרויקט '{{name}}'?",
+    "deleteLabel": "מחיקה",
+    "cancelLabel": "ביטול",
+    "now": "עכשיו",
+    "minutesAgo": "לפני {{count}} דקות",
+    "hoursAgo": "לפני {{count}} שעות",
+    "daysAgo": "לפני {{count}} ימים"
+  },
+
+  "settings": {
+    "title": "הגדרות",
+    "loadingSettings": "טוען הגדרות...",
+    "claudeConnection": "חיבור ל-Claude",
+    "apiMode": "מצב API — משלם לפי טוקנים",
+    "cliMode": "מצב CLI — דרך המנוי שלך (ללא עלות נוספת!)",
+    "apiKeyLabel": "API Key (השאר ריק למצב CLI/מנוי)",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "aiModel": "מודל AI",
+    "language": "שפה",
+    "hebrew": "עברית",
+    "english": "English",
+    "toolPermissions": "הרשאות כלים",
+    "permConservative": "שמרני — אישור על כל פעולה",
+    "permNormal": "רגיל — קריאה אוטומטית, כתיבה דורשת אישור",
+    "permFull": "מלא — הכל אוטומטי (מתקדם)",
+    "learningMode": "מצב למידה",
+    "learningModeDesc": "הוסף הערות מפורטות בעברית לכל קוד",
+    "maxTokens": "מקסימום טוקנים",
+    "maxTokensAria": "מקסימום טוקנים",
+    "maxTokensValue": "{{count}} טוקנים",
+    "fontSize": "גודל פונט",
+    "fontSizeAria": "גודל פונט",
+    "fontSizeValue": "{{size}} פיקסלים",
+    "quickActions": "פעולות מהירות",
+    "quickActionsDesc": "הצג פעולות מהירות בצ'אט",
+    "sessionStats": "סטטיסטיקות סשן",
+    "statTokens": "טוקנים",
+    "statCost": "עלות",
+    "statMessages": "הודעות",
+    "statMode": "מצב",
+    "statCliSubscription": "CLI (מנוי)"
+  },
+
+  "toolPermission": {
+    "requestTitle": "בקשת אישור — {{tool}}",
+    "dangerWarning": "כלי זה יכול לשנות קבצים או להריץ פקודות",
+    "safeDescription": "כלי {{tool}} מבקש אישור להרצה",
+    "noParams": "(ללא פרמטרים)",
+    "deny": "דחייה",
+    "approve": "אישור",
+    "denyAria": "דחייה — {{tool}}",
+    "approveAria": "אישור — {{tool}}",
+    "tools": {
+      "read_file": "קריאת קובץ",
+      "write_file": "כתיבת קובץ",
+      "edit_file": "עריכת קובץ",
+      "search_files": "חיפוש קבצים",
+      "search_content": "חיפוש תוכן",
+      "run_command": "הרצת פקודה",
+      "list_files": "רשימת קבצים",
+      "web_search": "חיפוש באינטרנט",
+      "web_fetch": "קריאת דף אינטרנט"
+    }
+  },
+
+  "shortcuts": {
+    "title": "קיצורי מקלדת",
+    "close": "סגירה",
+    "searchPlaceholder": "חיפוש קיצור...",
+    "searchAria": "חיפוש קיצורי מקלדת",
+    "noResults": "לא נמצאו קיצורים תואמים",
+    "pressEscToClose": "לחץ {{key}} לסגירה",
+    "sections": {
+      "chat": "צ'אט",
+      "navigation": "ניווט",
+      "projects": "פרויקטים",
+      "agents": "סוכנים",
+      "extra": "נוסף"
+    },
+    "actions": {
+      "newChat": "צ'אט חדש",
+      "sendMessage": "שליחת הודעה",
+      "newLine": "שורה חדשה בהודעה",
+      "clearChat": "ניקוי שיחה",
+      "toggleQuickActions": "הצג/הסתר פעולות מהירות",
+      "togglePanel": "פתיחת/סגירת הפאנל",
+      "fullScreen": "מסך מלא",
+      "splitView": "תצוגה מפוצלת",
+      "runProject": "הרצת פרויקט",
+      "switchAgent": "החלפת סוכן",
+      "voiceInput": "קלט קולי"
+    }
+  },
+
+  "confirm": {
+    "defaultConfirm": "אישור",
+    "defaultCancel": "ביטול"
+  },
+
+  "retry": {
+    "defaultLabel": "נסה שוב",
+    "retrying": "מנסה שוב..."
+  },
+
+  "common": {
+    "close": "סגור",
+    "cancel": "ביטול",
+    "confirm": "אישור",
+    "save": "שמור",
+    "delete": "מחיקה",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "warning": "אזהרה"
+  }
+}

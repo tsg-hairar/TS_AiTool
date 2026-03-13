@@ -1,14 +1,40 @@
-.vscode/**
+# Source files (compiled output is in dist/)
 src/**
 test/**
 node_modules/**
+
+# GitHub / CI
+.github/**
+
+# Config files not needed at runtime
+.vscode/**
 .gitignore
+.prettierrc
+.eslintrc
+.eslintrc.*
 tsconfig.json
+tsconfig.*.json
 esbuild.config.mjs
 vite.config.ts
 tailwind.config.js
 postcss.config.js
 vitest.config.ts
+
+# TypeScript source maps and source files (keep .js in dist)
 **/*.map
 **/*.ts
 !dist/**
+!dist/**/*.js
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+test-*.js
+test-*.txt
+
+# Development artifacts
+**/.DS_Store
+*.vsix
+.claude/**

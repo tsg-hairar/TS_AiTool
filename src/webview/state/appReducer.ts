@@ -24,9 +24,12 @@ export const initialState: AppState = {
   inputText: '',
   status: 'idle',
   errorMessage: null,
+  statusMessage: null,
   settings: null,
   gitInfo: null,
   fileDiffs: [],
+  diffFiles: [],
+  diffStaged: false,
   skills: [],
   notifications: [],
   quickActions: QUICK_ACTIONS,
@@ -36,14 +39,24 @@ export const initialState: AppState = {
   sidebarOpen: false,
   sidebarTab: 'history',
   searchQuery: '',
+  searchOpen: false,
+  searchMatchIndices: [],
+  searchCurrentMatch: 0,
   activeFile: null,
   fileTree: [],
   sessionCost: 0,
   totalTokens: 0,
   onboardingSeen: false,
   imageAttachments: [],
+  fileAttachments: [],
   pendingToolPermissions: [],
   workflowPickerOpen: false,
+  isOffline: false,
+  queuedMessages: [],
+  lastAutoSave: null,
+  showSaveIndicator: false,
+  sessionRestored: false,
+  restoreScrollPosition: 0,
 };
 
 // -------------------------------------------------
@@ -65,8 +78,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         activeProject: action.payload,
         // מעבר אוטומטי לתצוגת צ'אט כשפותחים פרויקט
         currentView: action.payload ? 'chat' : 'projects',
-        // ניקוי הודעות כשעוברים פרויקט
-        messages: action.payload ? [] : state.messages,
+        // לא מנקים messages! — LOAD_CONVERSATION יטען את ההיסטוריה
+        // ניקוי רק אם חוזרים לתצוגת פרויקטים (null)
+        messages: action.payload ? state.messages : [],
       };
 
     case 'ADD_PROJECT':
@@ -94,8 +108,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         activeAgentId: action.payload,
-        // ניקוי הודעות כשמחליפים סוכן (כל סוכן = צ'אט נפרד)
-        messages: [],
+        // לא מנקים messages כאן — LOAD_CONVERSATION יטען את ההיסטוריה
+        // של הסוכן החדש אם יש
       };
 
     case 'SET_WORKFLOWS':
@@ -161,7 +175,14 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         status: action.payload.status,
-        errorMessage: action.payload.message ?? null,
+        // אם הסטטוס הוא error — שומרים ב-errorMessage
+        // אחרת — שומרים ב-statusMessage (progress/info)
+        errorMessage: action.payload.status === 'error'
+          ? (action.payload.message ?? null)
+          : state.errorMessage,
+        statusMessage: action.payload.status !== 'error'
+          ? (action.payload.message ?? null)
+          : null,
       };
 
     // --- הגדרות ---
@@ -183,6 +204,13 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'SET_FILE_DIFFS':
       return { ...state, fileDiffs: action.payload };
+
+    case 'SET_DIFF_CONTENT':
+      return {
+        ...state,
+        diffFiles: action.payload.files,
+        diffStaged: action.payload.staged,
+      };
 
     // --- Skills ---
     case 'SET_SKILLS':
@@ -226,6 +254,22 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_SEARCH_QUERY':
       return { ...state, searchQuery: action.payload };
 
+    case 'SET_SEARCH_OPEN':
+      return {
+        ...state,
+        searchOpen: action.payload,
+        // כשסוגרים — מנקים את החיפוש
+        ...(action.payload
+          ? {}
+          : { searchQuery: '', searchMatchIndices: [], searchCurrentMatch: 0 }),
+      };
+
+    case 'SET_SEARCH_MATCHES':
+      return { ...state, searchMatchIndices: action.payload, searchCurrentMatch: 0 };
+
+    case 'SET_SEARCH_CURRENT_MATCH':
+      return { ...state, searchCurrentMatch: action.payload };
+
     case 'SET_ACTIVE_FILE':
       return { ...state, activeFile: action.payload };
 
@@ -253,6 +297,27 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'CLEAR_IMAGES':
       return { ...state, imageAttachments: [] };
 
+    // --- קבצים מצורפים ---
+    case 'ADD_FILE_ATTACHMENT':
+      return { ...state, fileAttachments: [...state.fileAttachments, action.payload] };
+
+    case 'UPDATE_FILE_ATTACHMENT':
+      return {
+        ...state,
+        fileAttachments: state.fileAttachments.map((f) =>
+          f.id === action.payload.id ? { ...f, ...action.payload.updates } : f,
+        ),
+      };
+
+    case 'REMOVE_FILE_ATTACHMENT':
+      return {
+        ...state,
+        fileAttachments: state.fileAttachments.filter((f) => f.id !== action.payload),
+      };
+
+    case 'CLEAR_FILE_ATTACHMENTS':
+      return { ...state, fileAttachments: [] };
+
     // --- Onboarding ---
     case 'SET_ONBOARDING_SEEN':
       return { ...state, onboardingSeen: action.payload };
@@ -276,9 +341,44 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'TOGGLE_WORKFLOW_PICKER':
       return { ...state, workflowPickerOpen: !state.workflowPickerOpen };
 
+    // --- שמירה אוטומטית ושחזור ---
+    case 'SET_AUTO_SAVE':
+      return {
+        ...state,
+        lastAutoSave: action.payload.timestamp,
+        showSaveIndicator: true,
+      };
+
+    case 'HIDE_SAVE_INDICATOR':
+      return { ...state, showSaveIndicator: false };
+
+    case 'SET_SESSION_RESTORED':
+      return {
+        ...state,
+        sessionRestored: true,
+        restoreScrollPosition: action.payload.scrollPosition,
+      };
+
+    case 'CLEAR_SESSION_RESTORED':
+      return { ...state, sessionRestored: false };
+
+    case 'SET_DRAFT':
+      return { ...state, inputText: action.payload.text };
+
+    // --- Offline / Connection ---
+    case 'SET_OFFLINE':
+      return { ...state, isOffline: action.payload };
+
+    case 'QUEUE_MESSAGE':
+      return { ...state, queuedMessages: [...state.queuedMessages, action.payload] };
+
+    case 'CLEAR_QUEUED_MESSAGES':
+      return { ...state, queuedMessages: [] };
+
     // --- שגיאה ---
+    // מחרוזת ריקה או null = ניקוי שגיאה
     case 'SET_ERROR':
-      return { ...state, errorMessage: action.payload };
+      return { ...state, errorMessage: action.payload || null };
 
     default:
       return state;

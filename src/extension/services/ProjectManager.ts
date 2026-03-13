@@ -8,10 +8,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { v4 as uuid } from 'crypto';
 import type { Project, ProjectSettings, ProjectHealth } from '../../shared/types';
 import { LIMITS } from '../../shared/constants';
 import { SettingsService } from './SettingsService';
+import { generateId } from '../../shared/utils/generateId';
 
 // מפתח לשמירה ב-globalState של VS Code
 const PROJECTS_KEY = 'tsAiTool.projects';
@@ -348,15 +348,3 @@ export class ProjectManager {
   }
 }
 
-// -------------------------------------------------
-// generateId — יצירת מזהה ייחודי
-// -------------------------------------------------
-function generateId(): string {
-  // שימוש ב-crypto של Node.js ליצירת UUID
-  const bytes = new Uint8Array(16);
-  require('crypto').randomFillSync(bytes);
-  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
-  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 1
-  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}

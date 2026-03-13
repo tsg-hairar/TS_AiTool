@@ -1,10 +1,18 @@
 {
-  "name": "ts-aitool",
-  "displayName": "TS_AiTool",
+  "name": "ts-aitool-v2",
+  "displayName": "TS_AiTool V2",
   "description": "AI-powered project management with multi-agent system, Hebrew RTL support, and smart coding assistant",
-  "version": "1.0.0",
-  "publisher": "ts-aitool",
+  "version": "0.1.0",
+  "publisher": "ts-aitool-dev",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ts-aitool-dev/ts-aitool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ts-aitool-dev/ts-aitool/issues"
+  },
+  "homepage": "https://github.com/ts-aitool-dev/ts-aitool#readme",
   "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"
@@ -50,107 +58,142 @@
     "commands": [
       {
         "command": "tsAiTool.togglePanel",
-        "title": "TS AiTool: Toggle Panel"
+        "title": "TS AiTool: פתח/סגור פאנל AI"
       },
       {
         "command": "tsAiTool.newChat",
-        "title": "TS AiTool: New Chat",
+        "title": "TS AiTool: פתח שיחה חדשה",
         "icon": "$(add)"
       },
       {
         "command": "tsAiTool.cancel",
-        "title": "TS AiTool: Cancel Request",
+        "title": "TS AiTool: בטל בקשה",
         "icon": "$(debug-stop)"
       },
       {
         "command": "tsAiTool.clearChat",
-        "title": "TS AiTool: Clear Chat"
+        "title": "TS AiTool: נקה שיחה"
       },
       {
         "command": "tsAiTool.fullScreen",
-        "title": "TS AiTool: Full Screen",
+        "title": "TS AiTool: מסך מלא",
         "icon": "$(screen-full)"
       },
       {
         "command": "tsAiTool.newProject",
-        "title": "TS AiTool: New Project",
+        "title": "TS AiTool: פרויקט חדש",
         "icon": "$(folder-opened)"
       },
       {
-        "command": "tsAiTool.switchProject",
-        "title": "TS AiTool: Switch Project"
-      },
-      {
         "command": "tsAiTool.switchAgent",
-        "title": "TS AiTool: Switch Agent"
-      },
-      {
-        "command": "tsAiTool.runWorkflow",
-        "title": "TS AiTool: Run Workflow"
-      },
-      {
-        "command": "tsAiTool.gitPush",
-        "title": "TS AiTool: Git Push"
-      },
-      {
-        "command": "tsAiTool.createPR",
-        "title": "TS AiTool: Create Pull Request"
-      },
-      {
-        "command": "tsAiTool.showIssues",
-        "title": "TS AiTool: Show GitHub Issues"
-      },
-      {
-        "command": "tsAiTool.openPreview",
-        "title": "TS AiTool: Open Preview"
-      },
-      {
-        "command": "tsAiTool.runProject",
-        "title": "TS AiTool: Run Project"
-      },
-      {
-        "command": "tsAiTool.openSettings",
-        "title": "TS AiTool: Open Settings",
-        "icon": "$(gear)"
-      },
-      {
-        "command": "tsAiTool.openSkillMarketplace",
-        "title": "TS AiTool: Skill Marketplace"
-      },
-      {
-        "command": "tsAiTool.toggleQuickActions",
-        "title": "TS AiTool: Toggle Quick Actions"
-      },
-      {
-        "command": "tsAiTool.openTerminal",
-        "title": "TS AiTool: Open Terminal in Chat"
-      },
-      {
-        "command": "tsAiTool.screenshotToCode",
-        "title": "TS AiTool: Screenshot to Code"
+        "title": "TS AiTool: בחר סוכן"
       },
       {
         "command": "tsAiTool.splitView",
-        "title": "TS AiTool: Split View (Two Agents)"
+        "title": "TS AiTool: תצוגה מפוצלת"
       },
       {
-        "command": "tsAiTool.voiceInput",
-        "title": "TS AiTool: Voice Input"
+        "command": "tsAiTool.searchChats",
+        "title": "TS AiTool: חפש בשיחות",
+        "icon": "$(search)"
       },
       {
-        "command": "tsAiTool.scanDependencies",
-        "title": "TS AiTool: Scan Dependencies"
+        "command": "tsAiTool.exportChat",
+        "title": "TS AiTool: ייצא שיחה נוכחית",
+        "icon": "$(export)"
       },
       {
-        "command": "tsAiTool.projectTimeline",
-        "title": "TS AiTool: Project Timeline"
+        "command": "tsAiTool.switchModel",
+        "title": "TS AiTool: החלף מודל Claude",
+        "icon": "$(symbol-enum)"
+      },
+      {
+        "command": "tsAiTool.runDoctor",
+        "title": "TS AiTool: הרץ אבחון מערכת",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "tsAiTool.selectAgent",
+        "title": "TS AiTool: בחר סוכן",
+        "icon": "$(person)"
+      },
+      {
+        "command": "tsAiTool.toggleFullscreen",
+        "title": "TS AiTool: מעבר למסך מלא",
+        "icon": "$(screen-full)"
+      },
+      {
+        "command": "tsAiTool.askAboutCode",
+        "title": "שאל את Claude על הקוד הנבחר",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "tsAiTool.securityCheckCode",
+        "title": "בדוק אבטחה בקוד",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "tsAiTool.explainCode",
+        "title": "הסבר קוד",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "tsAiTool.improveCode",
+        "title": "שפר קוד",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "tsAiTool.analyzeFile",
+        "title": "נתח קובץ עם Claude",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "tsAiTool.securityScanFile",
+        "title": "בדוק אבטחה",
+        "icon": "$(shield)"
       }
     ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "tsAiTool.askAboutCode",
+          "when": "editorHasSelection",
+          "group": "tsAiTool@1"
+        },
+        {
+          "command": "tsAiTool.explainCode",
+          "when": "editorHasSelection",
+          "group": "tsAiTool@2"
+        },
+        {
+          "command": "tsAiTool.improveCode",
+          "when": "editorHasSelection",
+          "group": "tsAiTool@3"
+        },
+        {
+          "command": "tsAiTool.securityCheckCode",
+          "when": "editorHasSelection",
+          "group": "tsAiTool@4"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tsAiTool.analyzeFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "tsAiTool@1"
+        },
+        {
+          "command": "tsAiTool.securityScanFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "tsAiTool@2"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "tsAiTool.togglePanel",
-        "key": "ctrl+shift+h",
-        "mac": "cmd+shift+h"
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
       },
       {
         "command": "tsAiTool.fullScreen",
@@ -160,7 +203,12 @@
       {
         "command": "tsAiTool.newChat",
         "key": "ctrl+shift+n",
-        "mac": "cmd+shift+n",
+        "mac": "cmd+shift+n"
+      },
+      {
+        "command": "tsAiTool.searchChats",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f",
         "when": "focusedView == 'tsAiTool.mainView'"
       },
       {
@@ -169,14 +217,9 @@
         "when": "focusedView == 'tsAiTool.mainView'"
       },
       {
-        "command": "tsAiTool.toggleQuickActions",
-        "key": "ctrl+/",
-        "when": "focusedView == 'tsAiTool.mainView'"
-      },
-      {
         "command": "tsAiTool.switchAgent",
-        "key": "ctrl+shift+a",
-        "mac": "cmd+shift+a",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g",
         "when": "focusedView == 'tsAiTool.mainView'"
       },
       {
@@ -186,16 +229,9 @@
         "when": "focusedView == 'tsAiTool.mainView'"
       },
       {
-        "command": "tsAiTool.voiceInput",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
-        "when": "focusedView == 'tsAiTool.mainView'"
-      },
-      {
-        "command": "tsAiTool.runProject",
-        "key": "ctrl+shift+b",
-        "mac": "cmd+shift+b",
-        "when": "focusedView == 'tsAiTool.mainView'"
+        "command": "tsAiTool.toggleFullscreen",
+        "key": "ctrl+shift+f2",
+        "mac": "cmd+shift+f2"
       }
     ],
     "configuration": {
@@ -204,7 +240,10 @@
         "tsAiTool.connectionMode": {
           "type": "string",
           "default": "cli",
-          "enum": ["cli", "api"],
+          "enum": [
+            "cli",
+            "api"
+          ],
           "enumItemLabels": [
             "Claude CLI — Your Subscription (Recommended)",
             "API Key — Pay per token"
@@ -215,7 +254,8 @@
         "tsAiTool.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Anthropic API Key (only needed in API mode)",
+          "markdownDeprecationMessage": "API keys are now stored securely. Use the extension settings panel to enter your API key.",
+          "description": "[Deprecated] API key is now stored securely via SecretStorage. Use the extension UI to set it.",
           "order": 1
         },
         "tsAiTool.model": {
@@ -237,15 +277,25 @@
         "tsAiTool.language": {
           "type": "string",
           "default": "he",
-          "enum": ["he", "en"],
-          "enumItemLabels": ["עברית", "English"],
+          "enum": [
+            "he",
+            "en"
+          ],
+          "enumItemLabels": [
+            "עברית",
+            "English"
+          ],
           "description": "Interface language",
           "order": 2
         },
         "tsAiTool.theme": {
           "type": "string",
           "default": "auto",
-          "enum": ["auto", "dark", "light"],
+          "enum": [
+            "auto",
+            "dark",
+            "light"
+          ],
           "description": "Color theme",
           "order": 3
         },
@@ -274,7 +324,11 @@
         "tsAiTool.permissionPreset": {
           "type": "string",
           "default": "normal",
-          "enum": ["conservative", "normal", "full"],
+          "enum": [
+            "conservative",
+            "normal",
+            "full"
+          ],
           "enumItemLabels": [
             "Conservative (Ask for everything)",
             "Normal (Auto-read, ask for writes)",
@@ -298,7 +352,11 @@
         "tsAiTool.voiceLanguage": {
           "type": "string",
           "default": "he-IL",
-          "enum": ["he-IL", "en-US", "ar-SA"],
+          "enum": [
+            "he-IL",
+            "en-US",
+            "ar-SA"
+          ],
           "description": "Voice input language",
           "order": 10
         }
@@ -315,10 +373,19 @@
     "package": "npm run build && vsce package",
     "test": "vitest run",
     "lint": "eslint src/",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "tsc --noEmit --skipLibCheck",
+      "eslint --fix"
+    ]
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
@@ -332,6 +399,8 @@
     "dompurify": "^3.1.0",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "highlight.js": "^11.10.0",
     "i18next": "^23.11.0",
     "lucide-react": "^0.400.0",

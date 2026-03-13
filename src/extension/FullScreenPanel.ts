@@ -19,6 +19,9 @@ import { AgentHandler } from './handlers/AgentHandler';
 import { GitHandler } from './handlers/GitHandler';
 import { SettingsHandler } from './handlers/SettingsHandler';
 import { SlashCommandHandler } from './handlers/SlashCommandHandler';
+import { ClaudeService } from './services/ClaudeService';
+import { ExportService } from './services/ExportService';
+import { FileTreeService } from './services/FileTreeService';
 
 export class FullScreenPanel {
   // Singleton-ish — שומרים רשימה של כל הפאנלים הפתוחים
@@ -27,6 +30,9 @@ export class FullScreenPanel {
   // ה-WebviewPanel עצמו — מייצג טאב בעורך
   private panel: vscode.WebviewPanel;
 
+  // שירות Claude משותף — instance אחד לכל ה-Handlers בפאנל זה
+  private claudeService: ClaudeService;
+
   // Handlers — אותם שירותים כמו ב-Sidebar, אבל עם postMessage נפרד
   private chatHandler: ChatHandler;
   private projectHandler: ProjectHandler;
@@ -34,6 +40,8 @@ export class FullScreenPanel {
   private gitHandler: GitHandler;
   private settingsHandler: SettingsHandler;
   private slashCommandHandler: SlashCommandHandler;
+  private exportService: ExportService;
+  private fileTreeService: FileTreeService;
 
   // -------------------------------------------------
   // createOrShow — יצירת פאנל חדש או הצגת קיים
@@ -80,10 +88,10 @@ export class FullScreenPanel {
   private constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly projectManager: ProjectManager,
-    conversationStore: ConversationStore,
+    private readonly conversationStore: ConversationStore,
     settingsService: SettingsService,
     gitService: GitService,
-    notificationService: NotificationService,
+    private readonly notificationService: NotificationService,
     column: vscode.ViewColumn,
   ) {
     // יצירת ה-WebviewPanel — נפתח כטאב באזור העורך
@@ -100,6 +108,7 @@ export class FullScreenPanel {
         localResourceRoots: [
           vscode.Uri.joinPath(context.extensionUri, 'dist', 'webview'),
           vscode.Uri.joinPath(context.extensionUri, 'dist', 'webview', 'assets'),
+          vscode.Uri.joinPath(context.extensionUri, 'dist', 'webview', 'chunks'),
           vscode.Uri.joinPath(context.extensionUri, 'media'),
         ],
       },
@@ -108,25 +117,43 @@ export class FullScreenPanel {
     // אייקון לטאב
     this.panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'icon.png');
 
+    // --- יצירת ClaudeService משותף ---
+    // instance אחד שמשרת את כל ה-Handlers בפאנל זה
+    this.claudeService = new ClaudeService();
+    void settingsService.getApiKey().then((apiKey) =>
+      this.claudeService.initialize(apiKey || undefined),
+    );
+
+    // הגדרת CWD מה-workspace הפתוח
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (workspaceFolder) {
+      this.claudeService.setWorkingDirectory(workspaceFolder);
+    }
+
     // --- אתחול Handlers ---
     // כל פאנל מקבל סט Handlers עצמאי עם postMessage משלו
     const postMessage = (msg: ExtensionToWebviewMessage) => {
       this.panel.webview.postMessage(msg);
     };
 
-    this.chatHandler = new ChatHandler(context, settingsService, conversationStore, postMessage);
+    this.chatHandler = new ChatHandler(context, settingsService, conversationStore, postMessage, this.claudeService);
     this.projectHandler = new ProjectHandler(projectManager, postMessage);
-    this.agentHandler = new AgentHandler(context, settingsService, conversationStore, postMessage);
+    this.agentHandler = new AgentHandler(context, settingsService, conversationStore, postMessage, this.claudeService);
     this.gitHandler = new GitHandler(gitService, postMessage);
     this.settingsHandler = new SettingsHandler(settingsService, postMessage);
-    this.slashCommandHandler = new SlashCommandHandler(this.chatHandler, this.gitHandler, postMessage);
+    this.slashCommandHandler = new SlashCommandHandler(
+      this.chatHandler, this.gitHandler, settingsService,
+      this.claudeService, postMessage,
+    );
+    this.exportService = new ExportService();
+    this.fileTreeService = new FileTreeService();
 
     // הגדרת HTML
     this.panel.webview.html = this.getWebviewContent();
 
     // האזנה להודעות מה-Webview
     this.panel.webview.onDidReceiveMessage(
-      (message: WebviewToExtensionMessage) => this.handleMessage(message),
+      (message: WebviewToExtensionMessage) => { void this.handleMessage(message); },
       undefined,
       context.subscriptions,
     );
@@ -220,10 +247,13 @@ export class FullScreenPanel {
 
         // --- הגדרות ---
         case 'getSettings':
-          this.settingsHandler.getSettings();
+          await this.settingsHandler.getSettings();
           break;
         case 'updateSettings':
           await this.settingsHandler.updateSettings(message.payload);
+          break;
+        case 'storeApiKey':
+          await this.settingsHandler.storeApiKey(message.payload.apiKey);
           break;
         case 'switchModel':
           await this.settingsHandler.switchModel(message.payload.model);
@@ -243,6 +273,19 @@ export class FullScreenPanel {
           await this.gitHandler.push();
           break;
 
+        // --- File Tree ---
+        case 'getFileTree':
+          await this.handleGetFileTree(message.payload.projectPath);
+          break;
+        case 'openFile':
+          await this.handleOpenFile(message.payload.filePath);
+          break;
+
+        // --- חיפוש ---
+        case 'searchMessages':
+          this.handleSearchMessages(message.payload.query, message.payload.scope);
+          break;
+
         // --- Slash Commands ---
         case 'slashCommand':
           await this.slashCommandHandler.execute(message.payload.command, message.payload.args);
@@ -256,9 +299,49 @@ export class FullScreenPanel {
           this.chatHandler.denyToolUse(message.payload.toolUseId);
           break;
 
+        // --- התראות ---
+        case 'dismissNotification':
+          this.notificationService.dismissNotification(message.payload.notificationId);
+          this.panel.webview.postMessage({
+            type: 'unreadCount',
+            payload: { count: this.notificationService.getUnreadCount() },
+          });
+          break;
+        case 'clearNotifications':
+          this.notificationService.clearAll();
+          this.panel.webview.postMessage({ type: 'notificationsCleared' });
+          this.panel.webview.postMessage({
+            type: 'unreadCount',
+            payload: { count: 0 },
+          });
+          break;
+        case 'getNotifications':
+          this.panel.webview.postMessage({
+            type: 'notificationList',
+            payload: this.notificationService.getAll(),
+          });
+          this.panel.webview.postMessage({
+            type: 'unreadCount',
+            payload: { count: this.notificationService.getUnreadCount() },
+          });
+          break;
+
         // --- Terminal ---
         case 'runTerminalCommand':
           await this.handleTerminalCommand(message.payload.command);
+          break;
+
+        // --- ייצוא שיחה ---
+        case 'exportChat':
+          await this.handleExportChat(message.payload.format);
+          break;
+
+        // --- Onboarding ---
+        case 'completeOnboarding':
+          await this.context.globalState.update('tsAiTool.onboardingCompleted', true);
+          break;
+        case 'showOnboarding':
+          await this.context.globalState.update('tsAiTool.onboardingCompleted', false);
           break;
 
         // --- Webview מוכן ---
@@ -277,7 +360,11 @@ export class FullScreenPanel {
 
   // שליחת מידע ראשוני כשה-Webview נפתח
   private async sendInitialData(): Promise<void> {
-    this.settingsHandler.getSettings();
+    // שולחים סטטוס onboarding
+    const onboardingCompleted = this.context.globalState.get<boolean>('tsAiTool.onboardingCompleted', false);
+    this.panel.webview.postMessage({ type: 'onboardingStatus', payload: { completed: onboardingCompleted } });
+
+    void this.settingsHandler.getSettings();
     await this.projectHandler.getProjects();
 
     // ייבוא אוטומטי של workspace
@@ -322,6 +409,97 @@ export class FullScreenPanel {
   }
 
   // -------------------------------------------------
+  // handleSearchMessages — חיפוש בהודעות
+  // -------------------------------------------------
+  private handleSearchMessages(query: string, scope?: 'current' | 'all'): void {
+    if (!query.trim()) {
+      this.panel.webview.postMessage({
+        type: 'searchResults',
+        payload: { matches: [], total: 0, query },
+      });
+      return;
+    }
+
+    const projectId = scope === 'all'
+      ? undefined
+      : this.chatHandler.getCurrentProjectId() ?? undefined;
+
+    const matches = this.conversationStore.search(query, projectId);
+
+    this.panel.webview.postMessage({
+      type: 'searchResults',
+      payload: {
+        matches: matches.slice(0, 100),
+        total: matches.length,
+        query,
+      },
+    });
+  }
+
+  // -------------------------------------------------
+  // handleExportChat — ייצוא שיחה
+  // -------------------------------------------------
+  private async handleExportChat(format: 'markdown' | 'html' | 'clipboard' | 'json'): Promise<void> {
+    const activeId = this.conversationStore.getActiveId();
+    if (!activeId) {
+      this.panel.webview.postMessage({
+        type: 'error',
+        payload: { message: 'אין שיחה פעילה לייצוא' },
+      });
+      return;
+    }
+
+    const conversation = this.conversationStore.get(activeId);
+    if (!conversation || conversation.messages.length === 0) {
+      this.panel.webview.postMessage({
+        type: 'error',
+        payload: { message: 'השיחה ריקה — אין מה לייצא' },
+      });
+      return;
+    }
+
+    const project = this.projectManager.getProjects().find(
+      (p) => p.id === conversation.projectId,
+    );
+
+    try {
+      await this.exportService.export(conversation, format, project?.name);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'שגיאה בייצוא';
+      this.panel.webview.postMessage({
+        type: 'error',
+        payload: { message: errMsg },
+      });
+    }
+  }
+
+  // -------------------------------------------------
+  // handleGetFileTree — סריקת עץ קבצים של פרויקט
+  // -------------------------------------------------
+  private async handleGetFileTree(projectPath: string): Promise<void> {
+    try {
+      const tree = await this.fileTreeService.getFileTree(projectPath);
+      this.panel.webview.postMessage({ type: 'fileTree', payload: tree });
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Failed to scan file tree';
+      this.panel.webview.postMessage({ type: 'error', payload: { message: errMsg } });
+    }
+  }
+
+  // -------------------------------------------------
+  // handleOpenFile — פתיחת קובץ בעורך VS Code
+  // -------------------------------------------------
+  private async handleOpenFile(filePath: string): Promise<void> {
+    try {
+      const uri = vscode.Uri.file(filePath);
+      await vscode.commands.executeCommand('vscode.open', uri);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Failed to open file';
+      this.panel.webview.postMessage({ type: 'error', payload: { message: errMsg } });
+    }
+  }
+
+  // -------------------------------------------------
   // getWebviewContent — אותו HTML כמו ב-Sidebar
   // -------------------------------------------------
   private getWebviewContent(): string {
@@ -346,7 +524,7 @@ export class FullScreenPanel {
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'none';
     style-src ${webview.cspSource} 'unsafe-inline';
-    script-src 'nonce-${nonce}';
+    script-src 'nonce-${nonce}' ${webview.cspSource};
     img-src ${webview.cspSource} data: https:;
     font-src ${webview.cspSource} https://fonts.gstatic.com;
     connect-src https://api.anthropic.com https://fonts.googleapis.com;

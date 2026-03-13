@@ -35,6 +35,23 @@ export class GitHandler {
     }
   }
 
+  public async getDiffContent(filePath?: string, staged?: boolean): Promise<void> {
+    try {
+      const files = staged
+        ? await this.gitService.getStagedDiff(filePath)
+        : await this.gitService.getFullDiff(filePath);
+      this.postMessage({
+        type: 'diffContent',
+        payload: { files, staged: !!staged },
+      });
+    } catch (error) {
+      this.postMessage({
+        type: 'error',
+        payload: { message: error instanceof Error ? error.message : 'Diff content error' },
+      });
+    }
+  }
+
   public async commit(message: string): Promise<void> {
     try {
       await this.gitService.commit(message);

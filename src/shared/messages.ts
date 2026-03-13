@@ -10,12 +10,17 @@ import type {
   AgentId,
   ChatMessage,
   Conversation,
+  DiffFile,
+  FileAttachment,
   FileDiff,
   GitInfo,
   ModelId,
   Project,
   ProjectHealth,
+  PromptTemplate,
+  PromptTemplateCategory,
   QuickAction,
+  SessionState,
   Skill,
   SmartNotification,
   UserSettings,
@@ -23,6 +28,7 @@ import type {
   WorkflowRun,
   ChatTemplate,
   TimelineEvent,
+  PinnedMessage,
 } from './types';
 
 // -------------------------------------------------
@@ -32,7 +38,7 @@ import type {
 
 export type WebviewToExtensionMessage =
   // --- צ'אט ---
-  | { type: 'sendMessage'; payload: { content: string; images?: string[] } }
+  | { type: 'sendMessage'; payload: { content: string; images?: string[]; files?: FileAttachment[] } }
   | { type: 'cancelRequest' }
   | { type: 'clearChat' }
   | { type: 'newChat' }
@@ -40,6 +46,7 @@ export type WebviewToExtensionMessage =
   | { type: 'deleteConversation'; payload: { conversationId: string } }
   | { type: 'toggleBookmark'; payload: { messageId: string } }
   | { type: 'togglePin'; payload: { messageId: string } }
+  | { type: 'getPinnedMessages' }
 
   // --- פרויקטים ---
   | { type: 'createProject'; payload: { name: string; path: string; description?: string } }
@@ -58,11 +65,13 @@ export type WebviewToExtensionMessage =
   // --- הגדרות ---
   | { type: 'getSettings' }
   | { type: 'updateSettings'; payload: Partial<UserSettings> }
+  | { type: 'storeApiKey'; payload: { apiKey: string } }
   | { type: 'switchModel'; payload: { model: ModelId } }
 
   // --- Git ---
   | { type: 'getGitInfo' }
   | { type: 'getGitDiff' }
+  | { type: 'getDiffContent'; payload?: { filePath?: string; staged?: boolean } }
   | { type: 'gitCommit'; payload: { message: string } }
   | { type: 'gitPush' }
 
@@ -82,10 +91,17 @@ export type WebviewToExtensionMessage =
   // --- Quick Actions ---
   | { type: 'executeQuickAction'; payload: { actionId: string } }
 
-  // --- תבניות ---
+  // --- תבניות צ'אט ---
   | { type: 'saveTemplate'; payload: { name: string; content: string; tags: string[] } }
   | { type: 'deleteTemplate'; payload: { templateId: string } }
   | { type: 'getTemplates' }
+
+  // --- תבניות פרומפט ---
+  | { type: 'getPromptTemplates' }
+  | { type: 'getPromptTemplatesByCategory'; payload: { category: PromptTemplateCategory } }
+  | { type: 'createPromptTemplate'; payload: { title: string; content: string; category: PromptTemplateCategory; icon: string; variables: string[] } }
+  | { type: 'updatePromptTemplate'; payload: { id: string; updates: Partial<PromptTemplate> } }
+  | { type: 'deletePromptTemplate'; payload: { templateId: string } }
 
   // --- Terminal ---
   | { type: 'runTerminalCommand'; payload: { command: string } }
@@ -99,14 +115,37 @@ export type WebviewToExtensionMessage =
   // --- Dependencies ---
   | { type: 'scanDependencies' }
 
+  // --- File Tree ---
+  | { type: 'getFileTree'; payload: { projectPath: string } }
+  | { type: 'openFile'; payload: { filePath: string } }
+
   // --- Timeline ---
   | { type: 'getTimeline'; payload: { projectId: string } }
 
   // --- חיפוש ---
-  | { type: 'searchMessages'; payload: { query: string } }
+  | { type: 'searchMessages'; payload: { query: string; scope?: 'current' | 'all' } }
 
   // --- ייצוא ---
-  | { type: 'exportChat'; payload: { format: 'markdown' | 'html' | 'clipboard' } }
+  | { type: 'exportChat'; payload: { format: 'markdown' | 'html' | 'clipboard' | 'json' } }
+
+  // --- התראות ---
+  | { type: 'dismissNotification'; payload: { notificationId: string } }
+  | { type: 'clearNotifications' }
+  | { type: 'getNotifications' }
+
+  // --- טיוטות ושחזור מושב ---
+  | { type: 'saveDraft'; payload: { conversationId: string; text: string } }
+  | { type: 'loadDraft'; payload: { conversationId: string } }
+  | { type: 'saveSessionState'; payload: { scrollPosition: number } }
+  | { type: 'requestSessionRestore' }
+
+  // --- Onboarding ---
+  | { type: 'completeOnboarding' }
+  | { type: 'showOnboarding' }
+
+  // --- קבצים מצורפים ---
+  | { type: 'readFileContent'; payload: { fileId: string; filePath: string } }
+  | { type: 'getFileInfo'; payload: { fileId: string; filePath: string } }
 
   // --- Webview מוכן ---
   | { type: 'webviewReady' };
@@ -125,6 +164,7 @@ export type ExtensionToWebviewMessage =
   | { type: 'chatCleared' }
   | { type: 'conversationLoaded'; payload: Conversation }
   | { type: 'conversationList'; payload: Conversation[] }
+  | { type: 'pinnedMessages'; payload: PinnedMessage[] }
 
   // --- פרויקטים ---
   | { type: 'projectList'; payload: Project[] }
@@ -146,6 +186,7 @@ export type ExtensionToWebviewMessage =
   // --- Git ---
   | { type: 'gitInfo'; payload: GitInfo }
   | { type: 'gitDiff'; payload: FileDiff[] }
+  | { type: 'diffContent'; payload: { files: DiffFile[]; staged: boolean } }
   | { type: 'gitResult'; payload: { success: boolean; message: string } }
 
   // --- Skills ---
@@ -159,12 +200,18 @@ export type ExtensionToWebviewMessage =
 
   // --- התראות ---
   | { type: 'notification'; payload: SmartNotification }
+  | { type: 'notificationList'; payload: SmartNotification[] }
+  | { type: 'unreadCount'; payload: { count: number } }
+  | { type: 'notificationsCleared' }
 
   // --- Quick Actions ---
   | { type: 'quickActionList'; payload: QuickAction[] }
 
   // --- תבניות ---
   | { type: 'templateList'; payload: ChatTemplate[] }
+
+  // --- תבניות פרומפט ---
+  | { type: 'promptTemplateList'; payload: PromptTemplate[] }
 
   // --- Terminal ---
   | { type: 'terminalOutput'; payload: { output: string; exitCode: number } }
@@ -176,7 +223,7 @@ export type ExtensionToWebviewMessage =
   | { type: 'timelineEvents'; payload: TimelineEvent[] }
 
   // --- חיפוש ---
-  | { type: 'searchResults'; payload: { matches: ChatMessage[]; total: number } }
+  | { type: 'searchResults'; payload: { matches: ChatMessage[]; total: number; query: string } }
 
   // --- סטטוס ---
   | { type: 'statusUpdate'; payload: { status: 'idle' | 'thinking' | 'streaming' | 'error'; message?: string } }
@@ -185,7 +232,19 @@ export type ExtensionToWebviewMessage =
 
   // --- File Explorer ---
   | { type: 'fileTree'; payload: FileTreeNode[] }
-  | { type: 'activeFileChanged'; payload: { filePath: string } };
+  | { type: 'activeFileChanged'; payload: { filePath: string } }
+
+  // --- טיוטות ושחזור מושב ---
+  | { type: 'draftLoaded'; payload: { conversationId: string; text: string } }
+  | { type: 'sessionRestored'; payload: SessionState }
+  | { type: 'autoSaveStatus'; payload: { saved: boolean; timestamp: string } }
+
+  // --- קבצים מצורפים ---
+  | { type: 'fileContentResult'; payload: { fileId: string; content: string; previewLines: string[]; isBase64: boolean; error?: string } }
+  | { type: 'fileInfoResult'; payload: { fileId: string; name: string; size: number; mimeType: string; extension: string; error?: string } }
+
+  // --- Onboarding ---
+  | { type: 'onboardingStatus'; payload: { completed: boolean } };
 
 // -------------------------------------------------
 // File Tree
@@ -197,10 +256,12 @@ export interface FileTreeNode {
   name: string;
   /** נתיב מלא */
   path: string;
-  /** האם תיקייה */
-  isDirectory: boolean;
+  /** סוג: file או folder */
+  type: 'file' | 'folder';
   /** ילדים (אם תיקייה) */
   children?: FileTreeNode[];
-  /** סוג קובץ (לאייקון) */
-  fileType?: string;
+  /** גודל קובץ בבתים (רק לקבצים) */
+  size?: number;
+  /** סיומת קובץ (רק לקבצים, ללא נקודה) */
+  extension?: string;
 }

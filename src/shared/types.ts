@@ -168,6 +168,8 @@ export interface ChatMessage {
   isPinned?: boolean;
   /** תמונות מצורפות */
   images?: ImageAttachment[];
+  /** קבצים מצורפים */
+  files?: FileAttachment[];
   /** טוקנים שנצרכו */
   tokenCount?: number;
   /** מצב streaming */
@@ -188,6 +190,18 @@ export interface ToolUse {
   status: 'pending' | 'running' | 'completed' | 'failed' | 'approved' | 'denied';
 }
 
+/** הודעה מוצמדת — מידע נוסף על הצמדה */
+export interface PinnedMessage {
+  /** מזהה ההודעה המקורית */
+  messageId: string;
+  /** הערה אופציונלית של המשתמש */
+  note?: string;
+  /** חותמת זמן הצמדה */
+  pinnedAt: string;
+  /** תוכן מקוצר להצגה מהירה */
+  preview: string;
+}
+
 /** תמונה מצורפת */
 export interface ImageAttachment {
   /** מזהה */
@@ -199,6 +213,35 @@ export interface ImageAttachment {
   /** נתונים base64 */
   data: string;
 }
+
+/** קובץ מצורף לצ'אט */
+export interface FileAttachment {
+  /** מזהה ייחודי */
+  id: string;
+  /** שם הקובץ */
+  name: string;
+  /** נתיב מלא (אם זמין) */
+  path?: string;
+  /** סוג MIME */
+  mimeType: string;
+  /** גודל בבתים */
+  size: number;
+  /** סיומת קובץ (ללא נקודה) */
+  extension: string;
+  /** תוכן הקובץ (טקסט/base64) */
+  content?: string;
+  /** האם התוכן הוא base64 (תמונות/בינאריים) */
+  isBase64?: boolean;
+  /** שורות תצוגה מקדימה (ל-code files) */
+  previewLines?: string[];
+  /** סטטוס קריאה */
+  status: 'pending' | 'reading' | 'ready' | 'error';
+  /** הודעת שגיאה */
+  errorMessage?: string;
+}
+
+/** קטגוריות קבצים מותרות לגרירה */
+export type FileCategory = 'code' | 'text' | 'image' | 'data' | 'config' | 'unknown';
 
 // -------------------------------------------------
 // שיחה (Conversation)
@@ -301,6 +344,8 @@ export interface SmartNotification {
   };
   /** חותמת זמן */
   timestamp: string;
+  /** האם ההתראה נסגרה */
+  dismissed?: boolean;
 }
 
 // -------------------------------------------------
@@ -329,7 +374,8 @@ export interface ModelInfo {
 
 /** הגדרות משתמש */
 export interface UserSettings {
-  apiKey: string;
+  /** Whether an API key is stored in SecretStorage (never contains the actual key) */
+  hasApiKey: boolean;
   model: ModelId;
   language: 'he' | 'en';
   theme: 'auto' | 'dark' | 'light';
@@ -375,6 +421,50 @@ export interface FileDiff {
   deletions: number;
   /** תוכן ה-diff */
   patch?: string;
+}
+
+/** שורה בודדת ב-diff */
+export interface DiffLine {
+  /** סוג השורה */
+  type: 'added' | 'removed' | 'unchanged' | 'header';
+  /** תוכן השורה */
+  content: string;
+  /** מספר שורה בקובץ הישן */
+  oldLineNumber?: number;
+  /** מספר שורה בקובץ החדש */
+  newLineNumber?: number;
+}
+
+/** Hunk — קטע בודד ב-diff */
+export interface DiffHunk {
+  /** כותרת ה-hunk (למשל @@ -10,5 +10,7 @@) */
+  header: string;
+  /** שורת התחלה בקובץ הישן */
+  oldStart: number;
+  /** מספר שורות בקובץ הישן */
+  oldCount: number;
+  /** שורת התחלה בקובץ החדש */
+  newStart: number;
+  /** מספר שורות בקובץ החדש */
+  newCount: number;
+  /** שורות ב-hunk */
+  lines: DiffLine[];
+}
+
+/** קובץ diff מלא עם hunks */
+export interface DiffFile {
+  /** שם הקובץ */
+  filename: string;
+  /** שם הקובץ הישן (במקרה של rename) */
+  oldFilename?: string;
+  /** סטטוס */
+  status: 'added' | 'modified' | 'deleted' | 'renamed';
+  /** שורות שנוספו */
+  additions: number;
+  /** שורות שנמחקו */
+  deletions: number;
+  /** קטעי diff */
+  hunks: DiffHunk[];
 }
 
 // -------------------------------------------------
@@ -438,6 +528,61 @@ export interface ChatTemplate {
 }
 
 // -------------------------------------------------
+// Prompt Templates — תבניות פרומפט לשימוש חוזר
+// -------------------------------------------------
+
+/** קטגוריות תבניות פרומפט */
+export type PromptTemplateCategory =
+  | 'general'
+  | 'code'
+  | 'review'
+  | 'debug'
+  | 'security'
+  | 'custom';
+
+/** תבנית פרומפט */
+export interface PromptTemplate {
+  /** מזהה ייחודי */
+  id: string;
+  /** כותרת התבנית */
+  title: string;
+  /** תוכן הפרומפט (תומך ב-{{variable}} placeholders) */
+  content: string;
+  /** קטגוריה */
+  category: PromptTemplateCategory;
+  /** אייקון */
+  icon: string;
+  /** משתנים — רשימת placeholders כמו {{code}}, {{file}}, {{language}} */
+  variables: string[];
+  /** האם תבנית מובנית (לא ניתנת למחיקה/עריכה) */
+  isBuiltIn: boolean;
+  /** תאריך יצירה */
+  createdAt: string;
+}
+
+// -------------------------------------------------
+// Session State — שחזור מושב
+// -------------------------------------------------
+
+/** מצב מושב לשחזור לאחר קריסה/טעינה מחדש */
+export interface SessionState {
+  /** מזהה השיחה הפעילה */
+  activeConversationId: string | null;
+  /** מזהה הפרויקט הפעיל */
+  activeProjectId: string | null;
+  /** הפאנל הפעיל */
+  activePanel: 'projects' | 'chat' | 'settings' | 'skills' | 'onboarding';
+  /** מזהה הסוכן הפעיל */
+  activeAgentId: AgentId;
+  /** מיקום גלילה בשיחה */
+  scrollPosition: number;
+  /** חותמת זמן השמירה */
+  savedAt: string;
+  /** דגל dirty — האם יש שינויים שלא נשמרו */
+  isDirty: boolean;
+}
+
+// -------------------------------------------------
 // Timeline
 // -------------------------------------------------
 
@@ -457,4 +602,42 @@ export interface TimelineEvent {
   agentId?: AgentId;
   /** מטא-דאטה */
   metadata?: Record<string, unknown>;
+}
+
+// -------------------------------------------------
+// Analytics — סטטיסטיקות שימוש
+// -------------------------------------------------
+
+/** סטטיסטיקות מסוכמות לתצוגה בדשבורד */
+export interface AnalyticsSummary {
+  /** סה"כ הודעות */
+  totalMessages: number;
+  /** סה"כ טוקנים */
+  totalTokens: number;
+  /** סה"כ עלות ($) */
+  totalCost: number;
+  /** זמן תגובה ממוצע (מילישניות) */
+  avgResponseTime: number;
+  /** מגמת הודעות (אחוז שינוי שבועי) */
+  messageTrend: number;
+  /** מגמת טוקנים */
+  tokenTrend: number;
+  /** מגמת עלות */
+  costTrend: number;
+  /** הודעות יומיות (7 ימים אחרונים) */
+  dailyMessages: Array<{ date: string; sent: number; received: number }>;
+  /** שימוש לפי סוכן */
+  agentUsage: Array<{ agentId: string; count: number }>;
+  /** פקודות פופולריות */
+  topCommands: Array<{ command: string; count: number }>;
+  /** פרויקטים לפי פעילות */
+  topProjects: Array<{ projectId: string; count: number }>;
+  /** משך סשן נוכחי (דקות) */
+  sessionDuration: number;
+  /** הודעות בסשן הנוכחי */
+  sessionMessages: number;
+  /** מודל נוכחי */
+  currentModel: string;
+  /** טוקנים יומיים (7 ימים אחרונים) */
+  dailyTokens: Array<{ date: string; tokens: number }>;
 }

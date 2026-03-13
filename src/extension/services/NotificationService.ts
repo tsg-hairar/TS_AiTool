@@ -2,13 +2,30 @@
 // NotificationService — התראות חכמות
 // ===================================================
 // מנהל התראות ו-Smart Triggers
+// שומר התראות ב-globalState כדי שישרדו reload
 // ===================================================
 
+import * as vscode from 'vscode';
 import type { SmartNotification, Conversation } from '../../shared/types';
 import { LIMITS } from '../../shared/constants';
+import { generateId } from '../../shared/utils/generateId';
+
+const STORAGE_KEY = 'notifications';
 
 export class NotificationService {
   private notifications: SmartNotification[] = [];
+
+  constructor(private readonly context: vscode.ExtensionContext) {
+    // טעינת התראות שמורות מ-globalState
+    this.notifications = this.context.globalState.get<SmartNotification[]>(STORAGE_KEY, []);
+  }
+
+  // -------------------------------------------------
+  // persist — שמירה ל-globalState
+  // -------------------------------------------------
+  private persist(): void {
+    void this.context.globalState.update(STORAGE_KEY, this.notifications);
+  }
 
   // -------------------------------------------------
   // checkTriggers — בדיקת טריגרים חכמים
@@ -59,10 +76,12 @@ export class NotificationService {
   public add(notification: SmartNotification): void {
     this.notifications.push(notification);
 
-    // שמירה על מגבלה
-    if (this.notifications.length > LIMITS.MAX_NOTIFICATIONS) {
+    // שמירה על מגבלה — FIFO eviction
+    while (this.notifications.length > LIMITS.MAX_NOTIFICATIONS) {
       this.notifications.shift();
     }
+
+    this.persist();
   }
 
   // -------------------------------------------------
@@ -73,10 +92,36 @@ export class NotificationService {
   }
 
   // -------------------------------------------------
-  // clear — ניקוי התראות
+  // dismissNotification — סימון התראה כ-dismissed
+  // -------------------------------------------------
+  public dismissNotification(id: string): void {
+    const notification = this.notifications.find((n) => n.id === id);
+    if (notification) {
+      notification.dismissed = true;
+      this.persist();
+    }
+  }
+
+  // -------------------------------------------------
+  // clearAll — ניקוי כל ההתראות
+  // -------------------------------------------------
+  public clearAll(): void {
+    this.notifications = [];
+    this.persist();
+  }
+
+  // -------------------------------------------------
+  // clear — ניקוי התראות (alias ל-clearAll)
   // -------------------------------------------------
   public clear(): void {
-    this.notifications = [];
+    this.clearAll();
+  }
+
+  // -------------------------------------------------
+  // getUnreadCount — מספר התראות שלא נקראו
+  // -------------------------------------------------
+  public getUnreadCount(): number {
+    return this.notifications.filter((n) => !n.dismissed).length;
   }
 
   // -------------------------------------------------
@@ -91,7 +136,7 @@ export class NotificationService {
     action?: SmartNotification['action'],
   ): SmartNotification {
     return {
-      id: Date.now().toString(),
+      id: generateId(),
       type,
       category,
       title,
