@@ -11,7 +11,7 @@
 
 import * as vscode from 'vscode';
 import type { ExtensionToWebviewMessage } from '../../shared/messages';
-import type { AgentId, WorkflowRun } from '../../shared/types';
+import type { AgentId, Workflow, WorkflowRun } from '../../shared/types';
 import { BUILT_IN_AGENTS, BUILT_IN_WORKFLOWS, TIMEOUTS } from '../../shared/constants';
 import { ClaudeService } from '../services/ClaudeService';
 import { ConversationStore } from '../services/ConversationStore';
@@ -123,6 +123,42 @@ export class AgentHandler {
   }
 
   // -------------------------------------------------
+  // hasCircularDependencies — בדיקת תלויות מעגליות
+  // -------------------------------------------------
+  // מונע מצב של workflow שנתקע בלולאה אינסופית
+  // -------------------------------------------------
+  private hasCircularDependencies(workflow: Workflow): boolean {
+    const outputVarToStep: Record<string, string> = {};
+    for (const step of workflow.steps) {
+      outputVarToStep[step.outputVar] = step.outputVar;
+    }
+
+    // DFS cycle detection
+    const visited = new Set<string>();
+    const inStack = new Set<string>();
+
+    const hasCycle = (outputVar: string): boolean => {
+      if (inStack.has(outputVar)) return true;
+      if (visited.has(outputVar)) return false;
+
+      visited.add(outputVar);
+      inStack.add(outputVar);
+
+      const step = workflow.steps.find((s) => s.outputVar === outputVar);
+      if (step) {
+        for (const dep of step.dependsOn ?? []) {
+          if (hasCycle(dep)) return true;
+        }
+      }
+
+      inStack.delete(outputVar);
+      return false;
+    };
+
+    return workflow.steps.some((step) => hasCycle(step.outputVar));
+  }
+
+  // -------------------------------------------------
   // clearWorkflowState — ניקוי מצב workflow
   // -------------------------------------------------
   private async clearWorkflowState(): Promise<void> {
@@ -181,6 +217,15 @@ export class AgentHandler {
       this.postMessage({
         type: 'error',
         payload: { message: `Workflow "${workflowId}" not found` },
+      });
+      return;
+    }
+
+    // בדיקת תלויות מעגליות (circular dependencies)
+    if (this.hasCircularDependencies(workflow)) {
+      this.postMessage({
+        type: 'error',
+        payload: { message: `Workflow "${workflow.name}" has circular dependencies between steps` },
       });
       return;
     }

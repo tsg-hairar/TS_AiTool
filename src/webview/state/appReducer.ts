@@ -78,9 +78,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         activeProject: action.payload,
         // מעבר אוטומטי לתצוגת צ'אט כשפותחים פרויקט
         currentView: action.payload ? 'chat' : 'projects',
-        // לא מנקים messages! — LOAD_CONVERSATION יטען את ההיסטוריה
-        // ניקוי רק אם חוזרים לתצוגת פרויקטים (null)
-        messages: action.payload ? state.messages : [],
+        // מנקים messages כדי למנוע flash של הודעות מפרויקט קודם
+        // LOAD_CONVERSATION יטען את ההיסטוריה של הפרויקט החדש
+        messages: [],
       };
 
     case 'ADD_PROJECT':
@@ -108,8 +108,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         activeAgentId: action.payload,
-        // לא מנקים messages כאן — LOAD_CONVERSATION יטען את ההיסטוריה
-        // של הסוכן החדש אם יש
+        // מנקים messages כדי למנוע flash של הודעות מהסוכן הקודם
+        // LOAD_CONVERSATION יטען את ההיסטוריה של הסוכן החדש
+        messages: [],
       };
 
     case 'SET_WORKFLOWS':
