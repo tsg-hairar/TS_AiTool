@@ -143,21 +143,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-03-14
+
+### Added
+- Circular dependency detection for workflows (DFS algorithm prevents infinite loops)
+- Comprehensive CSS design system: semantic colors, z-index scale, typography scale
+- Button system with 3 sizes, 4 variants, loading state, disabled state
+- Status badges (success/warning/error/info) with built-in styling
+- Responsive breakpoints (768px, 480px) with touch device support
+- Keyboard navigation for AgentTabs (arrows, Home/End) with full ARIA support
+- Character counter with Hebrew support in InputArea
+- Toast animations (entrance/exit) with smooth transitions
+- ConfirmDialog with backdrop blur and entrance animation
+- `useMemo` optimization for message filtering in ChatPanel
+- Agent-colored borders on MessageBubble component
+- Semantic health score colors on ProjectCard
+
+### Changed
+- AgentTabs now fully accessible with ARIA roles and keyboard navigation
+- Chat messages cleared immediately on agent/project switch (no more flash)
+
+### Fixed
+- **Flash of old messages** when switching agents via tabs (critical UX bug)
+- **Flash of old messages** when switching projects (critical UX bug)
+- Promise leak in ToolExecutionCoordinator (added `.catch()` handler)
+- Non-null assertion crashes in AgentHandler (4 locations → null checks with early return)
+- Non-null assertion crash in ClaudeService (→ null check with error throw)
+- Fire-and-forget promises in SidebarProvider and FullScreenPanel (added `.catch()`)
+- Silent failure in ConversationStore (added `.catch()` with logging)
+- Missing error boundary in AppContext message handler (added `try/catch`)
+- Draft save crash in ConversationManager (added `try/catch`)
+
+---
+
 ## [Unreleased]
 
 ### Added
-- Audit logging for tool executions via VS Code OutputChannel
-- CONTRIBUTING.md with development setup, code style, and PR guidelines
-- Troubleshooting section in README.md
-- Pre-commit hook configuration (husky + lint-staged)
-- JSDoc comments on core public APIs
+<!-- Add new features here -->
 
 ### Changed
-- Lowered virtualization threshold from 30 to 15 for better performance
-- Version changed to 0.1.0 (pre-release) until stable
-- Ongoing UI polish and performance improvements
-- Agent progress display enhancements
-- Response cache optimization
+<!-- Add changes here -->
 
 ### Fixed
 <!-- Add bug fixes here -->

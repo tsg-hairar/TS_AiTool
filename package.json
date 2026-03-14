@@ -2,7 +2,7 @@
   "name": "ts-aitool-v2",
   "displayName": "TS_AiTool V2",
   "description": "AI-powered project management with multi-agent system, Hebrew RTL support, and smart coding assistant",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "ts-aitool-dev",
   "license": "MIT",
   "repository": {
