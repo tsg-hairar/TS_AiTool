@@ -383,11 +383,14 @@ export function useScrollPosition<T extends HTMLElement>(
     const container = containerRef.current;
     if (!container) return;
 
-    container.addEventListener('scroll', () => throttledUpdate(), { passive: true });
+    // Store handler reference for proper cleanup
+    const scrollHandler = () => throttledUpdate();
+    container.addEventListener('scroll', scrollHandler, { passive: true });
     // מדידה ראשונית
     updatePosition();
 
     return () => {
+      container.removeEventListener('scroll', scrollHandler);
       throttledUpdate.cancel();
     };
   }, [throttledUpdate, updatePosition]);

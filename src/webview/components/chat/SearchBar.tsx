@@ -169,8 +169,17 @@ export function highlightSearchText(text: string, query: string): string {
   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escapedQuery})`, 'gi');
 
-  return text.replace(
-    regex,
-    '<mark class="search-highlight" style="background: rgba(255, 213, 79, 0.4); color: inherit; border-radius: 2px; padding: 0 1px;">$1</mark>',
-  );
+  // Split by HTML tags to only highlight text content, not tag attributes
+  const parts = text.split(/(<[^>]*>)/);
+  return parts
+    .map((part) => {
+      // Skip HTML tags
+      if (part.startsWith('<') && part.endsWith('>')) return part;
+      // Replace only in text content
+      return part.replace(
+        regex,
+        '<mark class="search-highlight" style="background: rgba(255, 213, 79, 0.4); color: inherit; border-radius: 2px; padding: 0 1px;">$1</mark>',
+      );
+    })
+    .join('');
 }

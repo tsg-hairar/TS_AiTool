@@ -180,7 +180,7 @@ export function ProjectCardSkeleton({ className = '' }: { className?: string }) 
         </div>
 
         {/* ציון בריאות */}
-        <div className="flex flex-col items-center gap-1 mr-3">
+        <div className="flex flex-col items-center gap-1 me-3">
           <ShimmerBlock width="40px" height="40px" borderRadius="50%" />
         </div>
       </div>
@@ -212,7 +212,7 @@ export function MessageSkeleton({
 
       {/* תוכן ההודעה */}
       <div
-        className={`rounded-lg px-3 py-2 ${isUser ? 'mr-4' : 'ml-4'}`}
+        className={`rounded-lg px-3 py-2 ${isUser ? 'me-4' : 'ms-4'}`}
         style={{
           background: isUser
             ? 'rgba(59, 130, 246, 0.1)'

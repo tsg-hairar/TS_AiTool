@@ -392,7 +392,7 @@ function createStatusBarItems(
     vscode.StatusBarAlignment.Left,
     99,
   );
-  connectionStatusBarItem.command = 'tsAiTool.openSettings';
+  connectionStatusBarItem.command = 'tsAiTool.runDoctor';
   connectionStatusBarItem.tooltip = 'מצב חיבור — לחץ להגדרות';
   const connectionMode = vscode.workspace.getConfiguration('tsAiTool').get<string>('connectionMode') || 'cli';
   updateConnectionStatusBar(connectionMode);

@@ -23,7 +23,7 @@ const COMMANDS: Record<string, { description: string; usage: string }> = {
   test: { description: 'כתיבת טסטים', usage: '/test [file]' },
   doc: { description: 'תיעוד קוד', usage: '/doc [file]' },
   security: { description: 'סריקת אבטחה', usage: '/security' },
-  run: { description: 'הרצת פרויקט', usage: '/run' },
+  // /run is handled via the 'run' case below
   finish: { description: 'Pipeline מלא', usage: '/finish' },
   memory: { description: 'שמירת הקשר לזיכרון', usage: '/memory' },
   compact: { description: 'דחיסת שיחה ארוכה', usage: '/compact' },
@@ -117,6 +117,12 @@ export class SlashCommandHandler {
       case 'finish':
         await this.chatHandler.sendMessage(
           'Run the full pipeline: 1) Code review 2) Write tests 3) Security scan 4) Build check 5) Documentation update.',
+        );
+        break;
+
+      case 'run':
+        await this.chatHandler.sendMessage(
+          'Run the project: find the start/build scripts in package.json and execute them. Report any errors.',
         );
         break;
 

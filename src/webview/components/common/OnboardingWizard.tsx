@@ -60,38 +60,6 @@ export function OnboardingWizard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const testTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // --- ניווט מקלדת ---
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        // בדיקת כיוון: RTL (עברית) = שמאלה הבא, LTR (אנגלית) = שמאלה הקודם
-        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.lang === 'he';
-        const nextKey = isRTL ? 'ArrowLeft' : 'ArrowRight';
-        const prevKey = isRTL ? 'ArrowRight' : 'ArrowLeft';
-
-        if (e.key === nextKey && currentStep < TOTAL_STEPS - 1) {
-          e.preventDefault();
-          goNext();
-        } else if (e.key === prevKey && currentStep > 0) {
-          e.preventDefault();
-          goPrev();
-        }
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (currentStep < TOTAL_STEPS - 1) {
-          goNext();
-        } else {
-          handleComplete();
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleSkip();
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentStep]);
-
   // --- פונקציות ניווט ---
   const goNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS - 1) {
@@ -131,6 +99,37 @@ export function OnboardingWizard() {
     dispatch({ type: 'SET_ONBOARDING_SEEN', payload: true });
     dispatch({ type: 'SET_VIEW', payload: 'projects' });
   }, [dispatch, sendMessage]);
+
+  // --- ניווט מקלדת ---
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.lang === 'he';
+        const nextKey = isRTL ? 'ArrowLeft' : 'ArrowRight';
+        const prevKey = isRTL ? 'ArrowRight' : 'ArrowLeft';
+
+        if (e.key === nextKey && currentStep < TOTAL_STEPS - 1) {
+          e.preventDefault();
+          goNext();
+        } else if (e.key === prevKey && currentStep > 0) {
+          e.preventDefault();
+          goPrev();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentStep < TOTAL_STEPS - 1) {
+          goNext();
+        } else {
+          handleComplete();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleSkip();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, goNext, goPrev, handleComplete, handleSkip]);
 
   // Cleanup test connection timers on unmount
   useEffect(() => {

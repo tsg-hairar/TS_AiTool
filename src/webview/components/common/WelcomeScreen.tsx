@@ -207,38 +207,6 @@ export function WelcomeScreen() {
     }
   }, [currentStep]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      const isRtl = getDirection(i18n.language) === 'rtl';
-
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        const nextKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
-        const prevKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
-
-        if (e.key === nextKey && currentStep < TOTAL_STEPS - 1) {
-          e.preventDefault();
-          goNext();
-        } else if (e.key === prevKey && currentStep > 0) {
-          e.preventDefault();
-          goPrev();
-        }
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (currentStep < TOTAL_STEPS - 1) {
-          goNext();
-        } else {
-          handleComplete();
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleSkip();
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentStep, i18n.language]);
-
   // --- Navigation ---
   const goNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS - 1) {
@@ -289,6 +257,38 @@ export function WelcomeScreen() {
     dispatch({ type: 'SET_ONBOARDING_SEEN', payload: true });
     dispatch({ type: 'SET_VIEW', payload: 'projects' });
   }, [dispatch, sendMessage]);
+
+  // Keyboard navigation (must be after callback declarations)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const isRtl = getDirection(i18n.language) === 'rtl';
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const nextKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
+        const prevKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
+
+        if (e.key === nextKey && currentStep < TOTAL_STEPS - 1) {
+          e.preventDefault();
+          goNext();
+        } else if (e.key === prevKey && currentStep > 0) {
+          e.preventDefault();
+          goPrev();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentStep < TOTAL_STEPS - 1) {
+          goNext();
+        } else {
+          handleComplete();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleSkip();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, i18n.language, goNext, goPrev, handleComplete, handleSkip]);
 
   // Cleanup test connection timers on unmount
   useEffect(() => {

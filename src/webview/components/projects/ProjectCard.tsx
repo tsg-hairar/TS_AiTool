@@ -76,7 +76,7 @@ export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCar
         </div>
 
         {/* ציון בריאות */}
-        <div className="flex flex-col items-center gap-1 mr-3">
+        <div className="flex flex-col items-center gap-1 me-3">
           <div
             className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${
               project.healthScore >= 80

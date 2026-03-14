@@ -435,9 +435,6 @@ function SplitDiffView({ file, contextLines }: { file: DiffFile; contextLines: n
 
   const { sections, expandedSections, expandSection } = useCollapsibleLines(pseudoLines, contextLines);
 
-  // Map section indices back to pairedLines
-  let pairIndex = 0;
-
   return (
     <div className="diff-table-wrapper" style={{ overflowX: 'auto' }}>
       <table className="diff-table diff-table-split w-full" style={{ borderCollapse: 'collapse', fontSize: '12px', fontFamily: 'var(--vscode-editor-font-family, Consolas, monospace)' }}>

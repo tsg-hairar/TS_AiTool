@@ -680,16 +680,39 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // handleTerminalCommand — הרצת פקודה בטרמינל
   // -------------------------------------------------
   private async handleTerminalCommand(command: string): Promise<void> {
-    const { exec } = await import('child_process');
+    const { spawn } = await import('child_process');
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
-    exec(command, { cwd, timeout: 30000 }, (error, stdout, stderr) => {
+    // Parse command into executable + args to prevent injection
+    const parts = command.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+    if (parts.length === 0) {
+      this.postMessage({ type: 'terminalOutput', payload: { output: 'Error: Empty command', exitCode: 1 } });
+      return;
+    }
+    const executable = parts[0]!.replace(/^["']|["']$/g, '');
+    const cmdArgs = parts.slice(1).map(a => a.replace(/^["']|["']$/g, ''));
+
+    const proc = spawn(executable, cmdArgs, { cwd, timeout: 30000, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
+
+    let stdout = '';
+    let stderr = '';
+    proc.stdout?.on('data', (data: Buffer) => { stdout += data.toString(); });
+    proc.stderr?.on('data', (data: Buffer) => { stderr += data.toString(); });
+
+    proc.on('close', (code) => {
       this.postMessage({
         type: 'terminalOutput',
         payload: {
-          output: stdout || stderr || error?.message || '',
-          exitCode: error ? error.code ?? 1 : 0,
+          output: stdout || stderr || '(no output)',
+          exitCode: code ?? 0,
         },
+      });
+    });
+
+    proc.on('error', (err) => {
+      this.postMessage({
+        type: 'terminalOutput',
+        payload: { output: `Error: ${err.message}`, exitCode: 1 },
       });
     });
   }

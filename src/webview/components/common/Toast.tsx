@@ -26,16 +26,19 @@ export function Toast() {
     [dispatch],
   );
 
-  // הסרה אוטומטית אחרי 5 שניות
+  // הסרה אוטומטית אחרי 5 שניות — עבור כל התראה
   useEffect(() => {
     if (state.notifications.length === 0) return;
 
-    const latest = state.notifications[state.notifications.length - 1];
-    const timer = setTimeout(() => {
-      dismissToast(latest.id);
-    }, 5000);
+    const timers = state.notifications.map((notification) =>
+      setTimeout(() => {
+        dismissToast(notification.id);
+      }, 5000),
+    );
 
-    return () => clearTimeout(timer);
+    return () => {
+      timers.forEach(clearTimeout);
+    };
   }, [state.notifications, dismissToast]);
 
   if (state.notifications.length === 0) return null;

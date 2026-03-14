@@ -7,11 +7,28 @@
 // ===================================================
 
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import type { ExtensionToWebviewMessage } from '../../../shared/messages';
 import type { ToolUse } from '../../../shared/types';
 import { SettingsService } from '../../services/SettingsService';
 import { validatePathSecurity } from '../../../shared/utils/pathValidation';
+
+// -------------------------------------------------
+// Command allowlist — only these commands can be run
+// -------------------------------------------------
+const ALLOWED_COMMANDS = new Set([
+  'ls', 'dir', 'cat', 'head', 'tail', 'echo', 'pwd', 'cd',
+  'node', 'npm', 'npx', 'yarn', 'pnpm', 'tsc', 'git',
+  'python', 'python3', 'pip', 'pip3',
+  'cargo', 'rustc', 'go', 'java', 'javac', 'mvn', 'gradle',
+  'dotnet', 'make', 'cmake',
+  'find', 'grep', 'rg', 'wc', 'sort', 'uniq', 'diff',
+  'mkdir', 'cp', 'mv', 'rm', 'touch', 'chmod',
+  'curl', 'wget',
+  'vitest', 'jest', 'mocha', 'eslint', 'prettier',
+  'docker', 'docker-compose',
+  'type', 'where', 'whoami', 'hostname',
+]);
 
 // -------------------------------------------------
 // Rate limiter — tracks tool calls per minute
@@ -209,9 +226,14 @@ export class ToolExecutionCoordinator {
           if (!currentContent.includes(oldText)) {
             return `Error editing file "${filePath}": old_text not found in file`;
           }
-          const updated = currentContent.replace(oldText, newText);
+          // Count occurrences to warn about multiple matches
+          const occurrences = currentContent.split(oldText).length - 1;
+          const updated = currentContent.replaceAll(oldText, newText);
+          const editNote = occurrences > 1
+            ? ` (${occurrences} occurrences replaced)`
+            : '';
           await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(updated));
-          return `File edited: ${safePath}`;
+          return `File edited: ${safePath}${editNote}`;
         } catch (err) {
           const msg = err instanceof Error ? err.message : `Could not edit file "${filePath}"`;
           return `Error editing file "${filePath}": ${msg}`;
@@ -281,13 +303,42 @@ export class ToolExecutionCoordinator {
         const command = input.command as string;
         if (!command) return 'Error: No command provided for run_command';
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+        // Parse command into executable + args to prevent injection
+        const parts = command.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+        if (parts.length === 0) return 'Error: Empty command';
+        const executable = parts[0]!.replace(/^["']|["']$/g, '');
+        const cmdArgs = parts.slice(1).map(a => a.replace(/^["']|["']$/g, ''));
+
+        // Validate against allowlist
+        const baseName = executable.split(/[/\\]/).pop()?.replace(/\.exe$/i, '') ?? '';
+        if (!ALLOWED_COMMANDS.has(baseName.toLowerCase())) {
+          return `Error: Command "${baseName}" is not in the allowed commands list. Allowed: ${[...ALLOWED_COMMANDS].slice(0, 15).join(', ')}...`;
+        }
+
         return new Promise((resolve) => {
-          exec(command, { cwd, timeout: 30000 }, (error: Error | null, stdout: string, stderr: string) => {
-            if (error) {
-              resolve(`Error running command "${command}" (exit ${(error as NodeJS.ErrnoException).code}): ${stderr || error.message}`);
+          const proc = spawn(executable, cmdArgs, {
+            cwd,
+            timeout: 30000,
+            shell: false,
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+
+          let stdout = '';
+          let stderr = '';
+          proc.stdout?.on('data', (data: Buffer) => { stdout += data.toString(); });
+          proc.stderr?.on('data', (data: Buffer) => { stderr += data.toString(); });
+
+          proc.on('close', (code) => {
+            if (code !== 0) {
+              resolve(`Error running command "${executable}" (exit ${code}): ${stderr || stdout || 'unknown error'}`);
             } else {
               resolve(stdout || stderr || '(no output)');
             }
+          });
+
+          proc.on('error', (err) => {
+            resolve(`Error running command "${executable}": ${err.message}`);
           });
         });
       }
