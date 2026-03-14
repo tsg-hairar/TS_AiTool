@@ -78,7 +78,13 @@ export function ProjectCard({ project, onOpen, onDelete, onRefresh }: ProjectCar
         {/* ציון בריאות */}
         <div className="flex flex-col items-center gap-1 mr-3">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${
+              project.healthScore >= 80
+                ? 'health-score-good'
+                : project.healthScore >= 50
+                ? 'health-score-warning'
+                : 'health-score-critical'
+            }`}
             style={{
               border: `2px solid ${healthColor}`,
               color: healthColor,

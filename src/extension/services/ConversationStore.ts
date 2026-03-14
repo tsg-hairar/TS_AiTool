@@ -72,7 +72,7 @@ export class ConversationStore {
       void Promise.all([
         this.context.globalState.update(CONVERSATIONS_KEY, conversations),
         this.context.globalState.update(DATA_VERSION_KEY, CURRENT_DATA_VERSION),
-      ]);
+      ]).catch(err => console.error('Failed to save conversations:', err));
     } catch (err) {
       log.error(' Migration failed, continuing with existing data:', err);
     }

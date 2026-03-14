@@ -85,6 +85,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // -------------------------------------------------
   useEffect(() => {
     function handleMessage(event: MessageEvent<ExtensionToWebviewMessage>) {
+      try {
       const message = event.data;
 
       switch (message.type) {
@@ -245,6 +246,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             dispatch({ type: 'CLEAR_SESSION_RESTORED' });
           }, 3_000);
           break;
+      }
+      } catch (err) {
+        console.error('[AppContext] Error handling message:', err);
       }
     }
 

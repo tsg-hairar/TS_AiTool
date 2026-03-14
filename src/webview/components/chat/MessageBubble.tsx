@@ -185,10 +185,10 @@ export const MessageBubble = React.memo(function MessageBubble({
       <div
         className={`rounded-lg px-3 py-2 text-sm leading-relaxed transition-all duration-300 ${
           isUser
-            ? 'me-4'
+            ? 'me-4 message-bubble-user'
             : isSystem
-            ? 'opacity-70'
-            : 'ms-4'
+            ? 'opacity-70 message-bubble-system'
+            : 'ms-4 message-bubble-assistant'
         }`}
         style={{
           background: message.isPinned
@@ -206,7 +206,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           borderInlineStart: message.isPinned
             ? '3px solid rgba(245, 158, 11, 0.7)'
             : !isUser && !isSystem
-            ? `3px solid var(--agent-${message.agentId ?? ''}, #666)`
+            ? `3px solid var(--agent-${message.agentId ?? ''}, #3b82f6)`
             : undefined,
           boxShadow: message.isPinned
             ? '0 0 12px rgba(245, 158, 11, 0.1), var(--shadow-sm)'

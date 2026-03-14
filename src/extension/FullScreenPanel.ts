@@ -122,7 +122,7 @@ export class FullScreenPanel {
     this.claudeService = new ClaudeService();
     void settingsService.getApiKey().then((apiKey) =>
       this.claudeService.initialize(apiKey || undefined),
-    );
+    ).catch(err => console.error('Failed to initialize Claude service:', err));
 
     // הגדרת CWD מה-workspace הפתוח
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;

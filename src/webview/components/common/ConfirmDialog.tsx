@@ -126,7 +126,7 @@ export function ConfirmDialog({
       }}
     >
       {/* רקע כהה — backdrop fade */}
-      <div className="absolute inset-0 bg-black/50 animate-backdrop-in" />
+      <div className="dialog-backdrop absolute inset-0 bg-black/50 animate-backdrop-in" />
 
       {/* הדיאלוג עצמו */}
       <div
@@ -136,7 +136,7 @@ export function ConfirmDialog({
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-message"
         dir="rtl"
-        className="relative w-80 max-w-[90vw] rounded-lg shadow-2xl p-5 animate-dialog-in"
+        className="dialog-content relative w-80 max-w-[90vw] rounded-lg shadow-2xl p-5 animate-dialog-in"
         style={{
           background: 'var(--vscode-editor-background)',
           border: '1px solid var(--vscode-panel-border)',

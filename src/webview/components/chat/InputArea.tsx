@@ -276,6 +276,11 @@ export function InputArea() {
         </div>
       </div>
 
+      {/* Character counter */}
+      <span className="text-xs" style={{ opacity: 0.5 }}>
+        {state.inputText.length > 0 ? `${state.inputText.length} תווים` : ''}
+      </span>
+
       {/* רמז — slash commands */}
       {state.inputText.startsWith('/') && (
         <div

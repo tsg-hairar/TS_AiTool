@@ -241,8 +241,8 @@ export function ChatPanel() {
   }, [state.messages, dispatch, sendMessage]);
 
   // הודעות מוצמדות (pinned) — מוצגות למעלה
-  const pinnedMessages = state.messages.filter((m) => m.isPinned);
-  const regularMessages = state.messages.filter((m) => !m.isPinned);
+  const pinnedMessages = useMemo(() => state.messages.filter((m) => m.isPinned), [state.messages]);
+  const regularMessages = useMemo(() => state.messages.filter((m) => !m.isPinned), [state.messages]);
 
   // פורמט זמן mm:ss
   const formatElapsed = (s: number) => {

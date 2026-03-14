@@ -71,6 +71,8 @@ export class ToolExecutionCoordinator {
             payload: { toolUseId: toolUse.id, output: 'Tool use denied by user', status: 'failed' },
           });
         }
+      }).catch((err) => {
+        console.error('[ToolExecutionCoordinator] Tool approval error:', err);
       });
     } else {
       this.executeToolAndReport(toolUse);

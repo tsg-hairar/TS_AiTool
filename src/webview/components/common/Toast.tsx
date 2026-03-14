@@ -2,11 +2,29 @@
 // Toast — התראות popup
 // ===================================================
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useApp } from '../../state/AppContext';
 
 export function Toast() {
   const { state, dispatch } = useApp();
+  const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+
+  // Dismiss with exit animation
+  const dismissToast = useCallback(
+    (id: string) => {
+      setExitingIds((prev) => new Set(prev).add(id));
+      // Wait for exit animation to complete before removing
+      setTimeout(() => {
+        dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
+        setExitingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 300);
+    },
+    [dispatch],
+  );
 
   // הסרה אוטומטית אחרי 5 שניות
   useEffect(() => {
@@ -14,20 +32,21 @@ export function Toast() {
 
     const latest = state.notifications[state.notifications.length - 1];
     const timer = setTimeout(() => {
-      dispatch({ type: 'REMOVE_NOTIFICATION', payload: latest.id });
+      dismissToast(latest.id);
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [state.notifications, dispatch]);
+  }, [state.notifications, dismissToast]);
 
   if (state.notifications.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2" role="region" aria-live="polite">
       {state.notifications.slice(-3).map((notification) => (
         <div
           key={notification.id}
-          className="animate-fade-in rounded-lg px-4 py-3 text-sm shadow-lg flex items-start justify-between"
+          role="alert"
+          className={`${exitingIds.has(notification.id) ? 'toast-exit' : 'toast-enter'} rounded-lg px-4 py-3 text-sm shadow-lg flex items-start justify-between`}
           style={{
             background: notification.type === 'error'
               ? 'var(--vscode-inputValidation-errorBackground, #5a1d1d)'
@@ -60,7 +79,7 @@ export function Toast() {
           {/* כפתור סגירה */}
           <button
             className="btn-ghost text-xs opacity-50 hover:opacity-100"
-            onClick={() => dispatch({ type: 'REMOVE_NOTIFICATION', payload: notification.id })}
+            onClick={() => dismissToast(notification.id)}
           >
             ✕
           </button>

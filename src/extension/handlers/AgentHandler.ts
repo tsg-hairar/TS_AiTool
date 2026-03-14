@@ -376,15 +376,23 @@ export class AgentHandler {
 
         // Replace template variables
         let stepInput = step.input;
-        for (const [varName, value] of Object.entries(this.workflowRun!.stepResults)) {
+        if (!this.workflowRun) {
+          console.error('[AgentHandler] workflowRun is null');
+          return;
+        }
+        for (const [varName, value] of Object.entries(this.workflowRun.stepResults)) {
           stepInput = stepInput.replace(`{{${varName}}}`, value);
         }
 
         // Switch agent
         await this.switchAgent(step.agentId);
 
-        this.workflowRun!.currentStep = i;
-        this.postMessage({ type: 'workflowUpdate', payload: { ...this.workflowRun! } });
+        if (!this.workflowRun) {
+          console.error('[AgentHandler] workflowRun is null');
+          return;
+        }
+        this.workflowRun.currentStep = i;
+        this.postMessage({ type: 'workflowUpdate', payload: { ...this.workflowRun } });
 
         const stepMsgId = `wf-step-${generateId()}`;
         this.postMessage({
@@ -414,7 +422,11 @@ export class AgentHandler {
           const result = await this.executeStep(stepInput, agent.systemPrompt, stepMsgId);
           const durationMs = Date.now() - stepStartTime;
 
-          this.workflowRun!.stepResults[step.outputVar] = result;
+          if (!this.workflowRun) {
+            console.error('[AgentHandler] workflowRun is null');
+            return;
+          }
+          this.workflowRun.stepResults[step.outputVar] = result;
 
           const stepResult: StepResult = {
             stepIndex: i,
@@ -482,20 +494,24 @@ export class AgentHandler {
     const skipped = this.stepResultLog.filter((r) => r.status === 'skipped');
 
     // קביעת סטטוס סופי
+    if (!this.workflowRun) {
+      console.error('[AgentHandler] workflowRun is null');
+      return;
+    }
     if (failed.length === 0 && skipped.length === 0) {
       // הכל הצליח
-      this.workflowRun!.status = 'completed';
+      this.workflowRun.status = 'completed';
     } else if (completed.length === 0) {
       // הכל נכשל
-      this.workflowRun!.status = 'failed';
-      this.workflowRun!.error = `All ${failed.length} steps failed`;
+      this.workflowRun.status = 'failed';
+      this.workflowRun.error = `All ${failed.length} steps failed`;
     } else {
       // הצלחה חלקית — מסמנים כ-completed עם הערה
-      this.workflowRun!.status = 'completed';
-      this.workflowRun!.error = `Partial: ${completed.length} succeeded, ${failed.length} failed, ${skipped.length} skipped`;
+      this.workflowRun.status = 'completed';
+      this.workflowRun.error = `Partial: ${completed.length} succeeded, ${failed.length} failed, ${skipped.length} skipped`;
     }
 
-    this.postMessage({ type: 'workflowUpdate', payload: { ...this.workflowRun! } });
+    this.postMessage({ type: 'workflowUpdate', payload: { ...this.workflowRun } });
 
     // הודעת סיכום מפורטת בצ'אט
     const summary = this.buildStepSummary(this.stepResultLog);

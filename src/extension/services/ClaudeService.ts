@@ -964,14 +964,18 @@ export class ClaudeService {
               : m.content,
           }));
 
+        if (!this.apiClient || !this.currentAbort) {
+          throw new Error('API client or abort controller not initialized');
+        }
+
         let fullText = '';
-        const stream = this.apiClient!.messages.stream({
+        const stream = this.apiClient.messages.stream({
           model,
           max_tokens: maxTokens,
           system: systemPrompt,
           messages: anthropicMessages,
         }, {
-          signal: this.currentAbort!.signal,
+          signal: this.currentAbort.signal,
         });
 
         stream.on('text', (text: string) => {
