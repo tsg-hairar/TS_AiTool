@@ -185,16 +185,16 @@ export class FullScreenPanel {
           this.chatHandler.cancelRequest();
           break;
         case 'clearChat':
-          this.chatHandler.clearChat();
+          await this.chatHandler.clearChat();
           break;
         case 'newChat':
-          this.chatHandler.newChat();
+          await this.chatHandler.newChat();
           break;
         case 'loadConversation':
           await this.chatHandler.loadConversation(message.payload.conversationId);
           break;
         case 'deleteConversation':
-          this.chatHandler.deleteConversation(message.payload.conversationId);
+          await this.chatHandler.deleteConversation(message.payload.conversationId);
           break;
         case 'toggleBookmark':
           this.chatHandler.toggleBookmark(message.payload.messageId);
@@ -207,13 +207,19 @@ export class FullScreenPanel {
         case 'createProject':
           await this.projectHandler.createProject(message.payload);
           break;
-        case 'openProject':
+        case 'openProject': {
           await this.projectHandler.openProject(message.payload.projectId);
+          const openedProject = this.projectManager.getProjects().find(
+            (p) => p.id === message.payload.projectId,
+          );
           this.chatHandler.setContext(
             message.payload.projectId,
             this.agentHandler.getCurrentAgent(),
+            openedProject?.path,
           );
+          this.chatHandler.loadLastConversation();
           break;
+        }
         case 'deleteProject':
           await this.projectHandler.deleteProject(message.payload.projectId);
           break;
@@ -237,6 +243,7 @@ export class FullScreenPanel {
             this.chatHandler.getCurrentProjectId() ?? '',
             message.payload.agentId,
           );
+          this.chatHandler.loadLastConversation();
           break;
         case 'runWorkflow':
           await this.agentHandler.runWorkflow(message.payload.workflowId, message.payload.input);
@@ -390,6 +397,8 @@ export class FullScreenPanel {
 
     this.agentHandler.sendAgentList();
     this.agentHandler.sendWorkflowList();
+
+    this.chatHandler.loadLastConversation();
   }
 
   // הרצת פקודת terminal

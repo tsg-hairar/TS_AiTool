@@ -87,6 +87,7 @@ export class ChatHandler {
   public setContext(projectId: string, agentId: AgentId, projectPath?: string): void {
     this.currentProjectId = projectId;
     this.currentAgentId = agentId;
+    this.conversationStore.resetActiveConversation();
 
     if (projectPath) {
       this.claudeService.setWorkingDirectory(projectPath);

@@ -154,22 +154,22 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           this.chatHandler.cancelRequest();
           break;
         case 'clearChat':
-          this.chatHandler.clearChat();
+          await this.chatHandler.clearChat();
           break;
         case 'newChat':
-          this.chatHandler.newChat();
+          await this.chatHandler.newChat();
           break;
         case 'loadConversation':
           await this.chatHandler.loadConversation(message.payload.conversationId);
           break;
         case 'deleteConversation':
-          this.chatHandler.deleteConversation(message.payload.conversationId);
+          await this.chatHandler.deleteConversation(message.payload.conversationId);
           break;
         case 'toggleBookmark':
-          this.chatHandler.toggleBookmark(message.payload.messageId);
+          await this.chatHandler.toggleBookmark(message.payload.messageId);
           break;
         case 'togglePin':
-          this.chatHandler.togglePin(message.payload.messageId);
+          await this.chatHandler.togglePin(message.payload.messageId);
           break;
 
         // --- פרויקטים ---
@@ -188,6 +188,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             this.agentHandler.getCurrentAgent(),
             openedProject?.path, // העברת CWD!
           );
+          this.chatHandler.loadLastConversation();
           break;
         }
         case 'deleteProject':

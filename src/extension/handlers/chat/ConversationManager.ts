@@ -225,6 +225,6 @@ export class ConversationManager {
   // -------------------------------------------------
   public dispose(): void {
     this.stopAutoSave();
-    this.autoSaveConversation();
+    this.autoSaveConversation().catch(() => {});
   }
 }

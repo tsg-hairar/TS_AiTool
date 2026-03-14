@@ -122,6 +122,13 @@ export class ConversationStore {
   }
 
   // -------------------------------------------------
+  // resetActiveConversation — reset active conversation on context switch
+  // -------------------------------------------------
+  public resetActiveConversation(): void {
+    this.activeConversationId = null;
+  }
+
+  // -------------------------------------------------
   // create — יצירת שיחה חדשה
   // -------------------------------------------------
   public async create(projectId: string, agentId: AgentId): Promise<Conversation> {
