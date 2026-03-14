@@ -31,6 +31,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // ה-Webview View — מייצג את הפאנל ב-VS Code
   private _view?: vscode.WebviewView;
 
+  // האם כבר אותחל — מונע דריסת פרויקט בכל visibility change
+  private initialized = false;
+
   // שירות Claude משותף — instance אחד לכל ה-Handlers
   private claudeService: ClaudeService;
 
@@ -208,16 +211,23 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           break;
 
         // --- סוכנים ---
-        case 'switchAgent':
+        case 'switchAgent': {
           await this.agentHandler.switchAgent(message.payload.agentId);
-          // עדכון הסוכן הנוכחי ב-ChatHandler
+          // מוצאים את נתיב הפרויקט הנוכחי כדי לשמור את ה-CWD
+          const currentProjectId = this.chatHandler.getCurrentProjectId();
+          const currentProject = currentProjectId
+            ? this.projectManager.getProjects().find((p) => p.id === currentProjectId)
+            : undefined;
+          // עדכון הסוכן הנוכחי ב-ChatHandler — כולל projectPath!
           this.chatHandler.setContext(
-            this.chatHandler.getCurrentProjectId() ?? '',
+            currentProjectId ?? '',
             message.payload.agentId,
+            currentProject?.path,
           );
           // טעינת היסטוריית שיחות של הסוכן החדש
           this.chatHandler.loadLastConversation();
           break;
+        }
         case 'runWorkflow':
           await this.agentHandler.runWorkflow(message.payload.workflowId, message.payload.input);
           break;
@@ -473,11 +483,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
 
     if (selected) {
-      await this.agentHandler.switchAgent(selected.value as import('../shared/types').AgentId);
-      this.chatHandler.setContext(
-        this.chatHandler.getCurrentProjectId() ?? '',
-        selected.value,
-      );
+      const agentId = selected.value as import('../shared/types').AgentId;
+      await this.agentHandler.switchAgent(agentId);
+      // שומרים על ה-CWD של הפרויקט הנוכחי
+      const projId = this.chatHandler.getCurrentProjectId();
+      const proj = projId
+        ? this.projectManager.getProjects().find((p) => p.id === projId)
+        : undefined;
+      this.chatHandler.setContext(projId ?? '', agentId, proj?.path);
       this.chatHandler.loadLastConversation();
       void vscode.window.showInformationMessage(`סוכן שונה ל-${selected.label}`);
     }
@@ -602,57 +615,96 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     // שולחים רשימת פרויקטים
     await this.projectHandler.getProjects();
 
-    // --- ייבוא אוטומטי של ה-workspace הפתוח ---
-    // אם יש תיקייה פתוחה ב-VS Code ואין פרויקטים — מייבאים אוטומטית
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (workspaceFolder) {
-      const existing = this.projectManager.getProjects();
-      const alreadyImported = existing.some(
-        (p) => p.path === workspaceFolder.uri.fsPath,
-      );
-
-      if (!alreadyImported) {
-        // ייבוא אוטומטי של ה-workspace כפרויקט
-        const folderName = workspaceFolder.name;
-        try {
-          const project = await this.projectManager.createProject(
-            folderName,
-            workspaceFolder.uri.fsPath,
-          );
-          this.postMessage({ type: 'projectCreated', payload: project });
-          // פתיחה אוטומטית
-          this.postMessage({ type: 'projectOpened', payload: project });
-          // העברת CWD כדי ש-Claude CLI יעבוד מתיקיית הפרויקט!
-          this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent(), project.path);
-          // רענון רשימה
-          await this.projectHandler.getProjects();
-        } catch {
-          // שקט — לא קריטי
-        }
-      } else {
-        // אם הפרויקט כבר קיים — פותחים אותו אוטומטית
-        const project = existing.find((p) => p.path === workspaceFolder.uri.fsPath);
-        if (project) {
-          this.postMessage({ type: 'projectOpened', payload: project });
-          // העברת CWD כדי ש-Claude CLI יעבוד מתיקיית הפרויקט!
-          this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent(), project.path);
-        }
-      }
-    }
-
     // שולחים רשימת סוכנים
     this.agentHandler.sendAgentList();
 
     // שולחים רשימת workflows
     this.agentHandler.sendWorkflowList();
 
-    // --- טעינת היסטוריית שיחות ---
-    // אם יש פרויקט פעיל, טוענים את השיחה האחרונה שלו
-    // כדי שהמשתמש ימשיך מאיפה שהפסיק!
-    this.chatHandler.loadLastConversation();
+    // --- אתחול ראשוני בלבד ---
+    // ייבוא אוטומטי, פתיחת פרויקט, טעינת שיחה — רק פעם ראשונה!
+    // אחרת, כל החזרה ל-sidebar דורסת את בחירת המשתמש
+    if (!this.initialized) {
+      this.initialized = true;
 
-    // --- שחזור מושב אחרון (אם קיים) ---
-    this.handleSessionRestore();
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (workspaceFolder) {
+        const existing = this.projectManager.getProjects();
+        const alreadyImported = existing.some(
+          (p) => p.path === workspaceFolder.uri.fsPath,
+        );
+
+        if (!alreadyImported) {
+          // ייבוא אוטומטי של ה-workspace כפרויקט
+          const folderName = workspaceFolder.name;
+          try {
+            const project = await this.projectManager.createProject(
+              folderName,
+              workspaceFolder.uri.fsPath,
+            );
+            this.postMessage({ type: 'projectCreated', payload: project });
+            this.postMessage({ type: 'projectOpened', payload: project });
+            this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent(), project.path);
+            await this.projectHandler.getProjects();
+          } catch {
+            // שקט — לא קריטי
+          }
+        } else {
+          // --- שחזור מושב אחרון אם יש ---
+          const sessionState = this.conversationStore.loadSessionState();
+          if (sessionState?.activeProjectId) {
+            // שחזור הפרויקט ששמור ב-session
+            const savedProject = this.projectManager.getProjects().find(
+              (p) => p.id === sessionState.activeProjectId,
+            );
+            if (savedProject) {
+              this.postMessage({ type: 'projectOpened', payload: savedProject });
+              const agentId = sessionState.activeAgentId ?? this.agentHandler.getCurrentAgent();
+              this.chatHandler.setContext(savedProject.id, agentId, savedProject.path);
+
+              // שחזור סוכן אם שונה מברירת מחדל
+              if (sessionState.activeAgentId && sessionState.activeAgentId !== this.agentHandler.getCurrentAgent()) {
+                void this.agentHandler.switchAgent(sessionState.activeAgentId);
+              }
+            } else {
+              // פרויקט ששמור נמחק — פותחים את ה-workspace
+              const project = existing.find((p) => p.path === workspaceFolder.uri.fsPath);
+              if (project) {
+                this.postMessage({ type: 'projectOpened', payload: project });
+                this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent(), project.path);
+              }
+            }
+          } else {
+            // אין session שמור — פותחים את ה-workspace
+            const project = existing.find((p) => p.path === workspaceFolder.uri.fsPath);
+            if (project) {
+              this.postMessage({ type: 'projectOpened', payload: project });
+              this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent(), project.path);
+            }
+          }
+        }
+      }
+
+      // טעינת השיחה האחרונה לפרויקט+סוכן הנוכחי
+      this.chatHandler.loadLastConversation();
+
+      // שחזור scroll position
+      this.handleSessionRestore();
+    } else {
+      // --- חזרה ל-sidebar (לא אתחול ראשוני) ---
+      // רק שולחים את המצב הנוכחי — לא דורסים!
+      const currentProjectId = this.chatHandler.getCurrentProjectId();
+      if (currentProjectId) {
+        const project = this.projectManager.getProjects().find(
+          (p) => p.id === currentProjectId,
+        );
+        if (project) {
+          this.postMessage({ type: 'projectOpened', payload: project });
+        }
+        // טעינת שיחה נוכחית מחדש (למקרה שה-webview נהרס ונבנה מחדש)
+        this.chatHandler.loadLastConversation();
+      }
+    }
   }
 
   // -------------------------------------------------

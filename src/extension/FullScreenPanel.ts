@@ -239,14 +239,21 @@ export class FullScreenPanel {
           break;
 
         // --- סוכנים ---
-        case 'switchAgent':
+        case 'switchAgent': {
           await this.agentHandler.switchAgent(message.payload.agentId);
+          // שומרים את ה-CWD של הפרויקט הנוכחי
+          const curProjId = this.chatHandler.getCurrentProjectId();
+          const curProj = curProjId
+            ? this.projectManager.getProjects().find((p) => p.id === curProjId)
+            : undefined;
           this.chatHandler.setContext(
-            this.chatHandler.getCurrentProjectId() ?? '',
+            curProjId ?? '',
             message.payload.agentId,
+            curProj?.path,
           );
           this.chatHandler.loadLastConversation();
           break;
+        }
         case 'runWorkflow':
           await this.agentHandler.runWorkflow(message.payload.workflowId, message.payload.input);
           break;

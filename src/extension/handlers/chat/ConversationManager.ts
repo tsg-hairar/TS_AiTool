@@ -140,24 +140,35 @@ export class ConversationManager {
     const { projectId, agentId } = this.getContext();
     if (!projectId) return;
 
+    // תמיד שולחים רשימת שיחות — גם אם ריקה
+    const allProjectConversations = this.conversationStore.getByProject(projectId);
+    this.postMessage({ type: 'conversationList', payload: allProjectConversations });
+
     const conversations = this.conversationStore.getByProjectAndAgent(
       projectId,
       agentId,
     );
 
-    if (conversations.length === 0) return;
+    if (conversations.length === 0) {
+      // אין שיחות לסוכן+פרויקט הזה — ננקה את הצ'אט
+      this.conversationStore.resetActiveConversation();
+      this.postMessage({ type: 'chatCleared' });
+      return;
+    }
 
     const latest = conversations.sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )[0];
 
-    if (!latest.messages || latest.messages.length === 0) return;
+    if (!latest.messages || latest.messages.length === 0) {
+      // שיחה קיימת אבל ריקה — ננקה
+      this.conversationStore.setActive(latest.id);
+      this.postMessage({ type: 'chatCleared' });
+      return;
+    }
 
     this.conversationStore.setActive(latest.id);
     this.postMessage({ type: 'conversationLoaded', payload: latest });
-
-    const allProjectConversations = this.conversationStore.getByProject(projectId);
-    this.postMessage({ type: 'conversationList', payload: allProjectConversations });
   }
 
   // -------------------------------------------------
