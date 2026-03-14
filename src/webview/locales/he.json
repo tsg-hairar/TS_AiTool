@@ -26,7 +26,10 @@
     "clearChatConfirmTitle": "ניקוי שיחה",
     "clearChatConfirmMessage": "האם לנקות את כל ההיסטוריה של השיחה?",
     "clearChatConfirmLabel": "ניקוי",
-    "cancel": "ביטול"
+    "cancel": "ביטול",
+    "saved": "נשמר",
+    "autoSaved": "נשמר אוטומטית",
+    "sessionRestored": "שיחה שוחזרה"
   },
 
   "chat": {

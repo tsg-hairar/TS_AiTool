@@ -64,11 +64,15 @@ export function OnboardingWizard() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        // בגלל RTL: חץ שמאלה = הבא, חץ ימינה = הקודם
-        if (e.key === 'ArrowLeft' && currentStep < TOTAL_STEPS - 1) {
+        // בדיקת כיוון: RTL (עברית) = שמאלה הבא, LTR (אנגלית) = שמאלה הקודם
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.lang === 'he';
+        const nextKey = isRTL ? 'ArrowLeft' : 'ArrowRight';
+        const prevKey = isRTL ? 'ArrowRight' : 'ArrowLeft';
+
+        if (e.key === nextKey && currentStep < TOTAL_STEPS - 1) {
           e.preventDefault();
           goNext();
-        } else if (e.key === 'ArrowRight' && currentStep > 0) {
+        } else if (e.key === prevKey && currentStep > 0) {
           e.preventDefault();
           goPrev();
         }

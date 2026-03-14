@@ -122,7 +122,7 @@ describe('GitService', () => {
         callCount++;
         const responses = [
           'main\n',
-          'abc123|feat: stuff|2024-01-15T10:30:00Z|John\n',
+          'abc123\x00feat: stuff\x002024-01-15T10:30:00Z\x00John\n',
           ' M file1.ts\n M file2.ts\n',
           'https://github.com/test/repo.git\n',
         ];
@@ -145,7 +145,8 @@ describe('GitService', () => {
           if (event === 'close') cb(0);
         });
 
-        return child;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return child as any;
       });
 
       const info = await service.getInfo('/test/workspace');
@@ -209,7 +210,8 @@ describe('GitService', () => {
           if (event === 'close') cb(0);
         });
 
-        return child;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return child as any;
       });
 
       await expect(service.commit('test commit', '/test/workspace')).rejects.toThrow('Security');
@@ -350,7 +352,7 @@ describe('GitService', () => {
       { name: 'GitLab Token', pattern: /glpat-[A-Za-z0-9_\-]{20,}/ },
       { name: 'Slack Token', pattern: /xox[bpors]-[A-Za-z0-9\-]{10,}/ },
       { name: 'Google API Key', pattern: /AIza[0-9A-Za-z_\-]{35}/ },
-      { name: 'Stripe Key', pattern: /(?:sk|pk)_(?:test|live)_[A-Za-z0-9]{20,}/ },
+      { name: 'Stripe Key', pattern: /(?:sk|pk)_(?:test|live)_[A-Za-z0-9_]{20,}/ },
       { name: 'Azure Secret', pattern: /(?:azure[_-]?(?:client|tenant|subscription)[_-]?(?:secret|id|key))\s*[:=]\s*['"]?[A-Za-z0-9_\-]{20,}['"]?/i },
       { name: 'Hardcoded Secret', pattern: /(?:password|secret|passwd|pwd)\s*[:=]\s*['"][^'"]{8,}['"]/i },
     ];
@@ -555,11 +557,13 @@ describe('GitService', () => {
       expect(lines.length).toBe(3);
     });
 
-    it('should handle commit with pipe characters in message', () => {
-      const output = 'abc123|fix: handle | edge case|2024-01-15T10:30:00Z|Jane';
-      const [hash, message, date, author] = output.split('|');
+    it('should handle commit with pipe characters in message using null byte delimiter', () => {
+      const output = 'abc123\x00fix: handle | edge case\x002024-01-15T10:30:00Z\x00Jane';
+      const [hash, message, date, author] = output.split('\x00');
       expect(hash).toBe('abc123');
-      expect(message).toBe('fix: handle ');
+      expect(message).toBe('fix: handle | edge case');
+      expect(date).toBe('2024-01-15T10:30:00Z');
+      expect(author).toBe('Jane');
     });
   });
 
@@ -568,10 +572,10 @@ describe('GitService', () => {
   // -------------------------------------------------
   describe('parseDiffOutput (unified format)', () => {
     // Access the private method via prototype for testing
-    function parseDiffOutput(rawDiff: string) {
+    function parseDiffOutput(rawDiff: string): import('../shared/types').DiffFile[] {
       const svc = new GitService();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private method for testing
-      return (svc as unknown as Record<string, (raw: string) => unknown>).parseDiffOutput(rawDiff);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (svc as any).parseDiffOutput(rawDiff);
     }
 
     it('should return empty array for empty input', () => {

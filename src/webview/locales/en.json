@@ -26,7 +26,10 @@
     "clearChatConfirmTitle": "Clear Chat",
     "clearChatConfirmMessage": "Are you sure you want to clear all chat history?",
     "clearChatConfirmLabel": "Clear",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "autoSaved": "Auto-saved",
+    "sessionRestored": "Session restored"
   },
 
   "chat": {

@@ -84,6 +84,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // האזנה להודעות מה-Extension
   // -------------------------------------------------
   useEffect(() => {
+    // רשימת timers לניקוי בעת unmount
+    const pendingTimers: ReturnType<typeof setTimeout>[] = [];
+
     function handleMessage(event: MessageEvent<ExtensionToWebviewMessage>) {
       try {
       const message = event.data;
@@ -232,9 +235,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         case 'autoSaveStatus':
           dispatch({ type: 'SET_AUTO_SAVE', payload: { timestamp: message.payload.timestamp } });
           // הסתרת אינדיקטור שמירה אחרי 2 שניות
-          setTimeout(() => {
+          pendingTimers.push(setTimeout(() => {
             dispatch({ type: 'HIDE_SAVE_INDICATOR' });
-          }, 2_000);
+          }, 2_000));
           break;
         case 'sessionRestored':
           dispatch({
@@ -242,9 +245,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             payload: { scrollPosition: message.payload.scrollPosition },
           });
           // ניקוי דגל שחזור אחרי 3 שניות
-          setTimeout(() => {
+          pendingTimers.push(setTimeout(() => {
             dispatch({ type: 'CLEAR_SESSION_RESTORED' });
-          }, 3_000);
+          }, 3_000));
           break;
       }
       } catch (err) {
@@ -258,8 +261,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // הודעה ל-Extension שה-Webview מוכן
     sendMessage({ type: 'webviewReady' });
 
-    // ניקוי — הסרת listener כשהקומפוננטה נהרסת
-    return () => window.removeEventListener('message', handleMessage);
+    // ניקוי — הסרת listener וטיימרים כשהקומפוננטה נהרסת
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      pendingTimers.forEach(clearTimeout);
+    };
   }, [sendMessage]);
 
   return (

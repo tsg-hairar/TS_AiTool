@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useApp } from '../../state/AppContext';
 
 export function Toast() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, sendMessage } = useApp();
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
 
   // Dismiss with exit animation
@@ -71,7 +71,16 @@ export function Toast() {
 
           {/* כפתור פעולה */}
           {notification.action && (
-            <button className="btn-ghost text-xs mr-2">
+            <button
+              className="btn-ghost text-xs mr-2"
+              onClick={() => {
+                // שליחת הפקודה ל-extension
+                if (notification.action?.command) {
+                  sendMessage({ type: 'executeCommand', payload: { command: notification.action.command } } as never);
+                }
+                dismissToast(notification.id);
+              }}
+            >
               {notification.action.label}
             </button>
           )}

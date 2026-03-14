@@ -102,9 +102,9 @@ export function parseDiffOutput(rawDiff: string): DiffFile[] {
         index: hunkMatch.index,
         header: hunkMatch[0],
         oldStart: parseInt(hunkMatch[1]) || 1,
-        oldCount: parseInt(hunkMatch[2]) ?? 0,
+        oldCount: parseInt(hunkMatch[2]) || 0,
         newStart: parseInt(hunkMatch[3]) || 1,
-        newCount: parseInt(hunkMatch[4]) ?? 0,
+        newCount: parseInt(hunkMatch[4]) || 0,
         context: (hunkMatch[5] || '').trim(),
       });
     }

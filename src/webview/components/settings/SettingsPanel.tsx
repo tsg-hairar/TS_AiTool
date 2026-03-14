@@ -235,14 +235,13 @@ export function SettingsPanel() {
 }
 
 // --- קומפוננטת עזר: סקשן ---
-let sectionCounter = 0;
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const idRef = React.useRef(`settings-section-${sectionCounter++}`);
-  const id = idRef.current;
+  const id = React.useId();
+  const sectionId = `settings-section-${id}`;
   return (
-    <div role="group" aria-labelledby={id}>
+    <div role="group" aria-labelledby={sectionId}>
       <h3
-        id={id}
+        id={sectionId}
         className="text-xs font-medium mb-2"
         style={{ color: 'var(--vscode-foreground)' }}
       >

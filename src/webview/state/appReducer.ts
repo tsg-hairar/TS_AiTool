@@ -278,11 +278,17 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, fileTree: action.payload };
 
     // --- עלות ---
+    // אם messageId קיים — נשתמש בו למניעת ספירה כפולה
+    // אם לא — נוסיף ישירות (תאימות אחורה)
     case 'SET_COST':
       return {
         ...state,
-        sessionCost: state.sessionCost + action.payload.sessionCost,
-        totalTokens: state.totalTokens + action.payload.totalTokens,
+        sessionCost: action.payload.absolute
+          ? action.payload.sessionCost
+          : state.sessionCost + action.payload.sessionCost,
+        totalTokens: action.payload.absolute
+          ? action.payload.totalTokens
+          : state.totalTokens + action.payload.totalTokens,
       };
 
     // --- תמונות ---

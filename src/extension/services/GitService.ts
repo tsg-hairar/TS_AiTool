@@ -72,19 +72,20 @@ export class GitService {
 
     const [branch, lastCommit, status, remote] = await Promise.all([
       this.run(['git', 'branch', '--show-current'], workDir),
-      this.run(['git', 'log', '-1', '--format=%H|%s|%aI|%an'], workDir),
+      this.run(['git', 'log', '-1', '--format=%H%x00%s%x00%aI%x00%an'], workDir),
       this.run(['git', 'status', '--porcelain'], workDir),
       this.run(['git', 'remote', 'get-url', 'origin'], workDir).catch(() => ''),
     ]);
 
-    const [hash, message, date, author] = lastCommit.split('|');
+    const commitParts = lastCommit.trim().split('\0');
+    const [hash, message, date, author] = commitParts;
 
     const result: GitInfo = {
       branch: branch.trim(),
       uncommittedChanges: status.trim().split('\n').filter(Boolean).length,
       remoteUrl: remote.trim() || undefined,
       lastCommit: hash
-        ? { hash: hash.trim(), message, date, author }
+        ? { hash: hash.trim(), message: message?.trim(), date: date?.trim(), author: author?.trim() }
         : undefined,
     };
 
@@ -226,9 +227,9 @@ export class GitService {
           index: hunkMatch.index,
           header: hunkMatch[0],
           oldStart: parseInt(hunkMatch[1]) || 1,
-          oldCount: parseInt(hunkMatch[2]) ?? 0,
+          oldCount: parseInt(hunkMatch[2]) || 0,
           newStart: parseInt(hunkMatch[3]) || 1,
-          newCount: parseInt(hunkMatch[4]) ?? 0,
+          newCount: parseInt(hunkMatch[4]) || 0,
         });
       }
 
@@ -353,7 +354,7 @@ export class GitService {
         // Google API Key
         { name: 'Google API Key', pattern: /AIza[0-9A-Za-z_\-]{35}/ },
         // Stripe keys
-        { name: 'Stripe Key', pattern: /(?:sk|pk)_(?:test|live)_[A-Za-z0-9]{20,}/ },
+        { name: 'Stripe Key', pattern: /(?:sk|pk)_(?:test|live)_[A-Za-z0-9_]{20,}/ },
         // Azure
         { name: 'Azure Secret', pattern: /(?:azure[_-]?(?:client|tenant|subscription)[_-]?(?:secret|id|key))\s*[:=]\s*['"]?[A-Za-z0-9_\-]{20,}['"]?/i },
         // Generic secret/password assignment

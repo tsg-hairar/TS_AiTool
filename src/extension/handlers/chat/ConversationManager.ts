@@ -35,7 +35,9 @@ export class ConversationManager {
   // -------------------------------------------------
   private startAutoSave(): void {
     this.autoSaveTimer = setInterval(() => {
-      this.autoSaveConversation();
+      this.autoSaveConversation().catch((err) => {
+        console.error('[ConversationManager] Auto-save failed:', err);
+      });
     }, 30_000);
   }
 

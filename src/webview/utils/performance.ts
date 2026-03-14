@@ -34,7 +34,8 @@ export function useDebounce<T>(value: T, delay: number): T {
 // -------------------------------------------------
 // מחזיר callback שמתבצע רק אחרי שהפסיקו לקרוא לו
 // -------------------------------------------------
-export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number,
 ): ((...args: Parameters<T>) => void) & { cancel: () => void } {
@@ -85,7 +86,8 @@ export function useThrottle<T>(value: T, delay: number): T {
 // -------------------------------------------------
 // useThrottledCallback — פונקציה מוגבלת בקצב
 // -------------------------------------------------
-export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useThrottledCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number,
 ): ((...args: Parameters<T>) => void) & { cancel: () => void } {

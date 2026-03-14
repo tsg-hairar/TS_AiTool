@@ -84,10 +84,10 @@ export function Toolbar() {
               WebkitBackdropFilter: 'blur(6px)',
               border: '1px solid rgba(255,255,255,0.04)',
             }}
-            title={state.lastAutoSave ? `נשמר: ${new Date(state.lastAutoSave).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : ''}
-            aria-label="נשמר אוטומטית"
+            title={state.lastAutoSave ? `${t('toolbar.saved', 'נשמר')}: ${new Date(state.lastAutoSave).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : ''}
+            aria-label={t('toolbar.autoSaved', 'נשמר אוטומטית')}
           >
-            נשמר
+            {t('toolbar.saved', 'נשמר')}
           </span>
         )}
 
@@ -96,9 +96,9 @@ export function Toolbar() {
           <span
             className="text-[10px] ps-2 pe-2 py-0.5 rounded-full animate-fade-in"
             style={{ background: 'rgba(34, 197, 94, 0.2)', color: 'rgb(134, 239, 172)' }}
-            aria-label="שיחה שוחזרה"
+            aria-label={t('toolbar.sessionRestored', 'שיחה שוחזרה')}
           >
-            שיחה שוחזרה
+            {t('toolbar.sessionRestored', 'שיחה שוחזרה')}
           </span>
         )}
 

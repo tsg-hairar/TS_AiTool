@@ -200,7 +200,7 @@ export type AppAction =
   | { type: 'SET_FILE_TREE'; payload: FileTreeNode[] }
 
   // עלות
-  | { type: 'SET_COST'; payload: { sessionCost: number; totalTokens: number } }
+  | { type: 'SET_COST'; payload: { sessionCost: number; totalTokens: number; absolute?: boolean } }
 
   // תמונות
   | { type: 'ADD_IMAGE'; payload: string }

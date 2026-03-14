@@ -79,7 +79,12 @@ export function ConfirmDialog({
 
       if (e.key === 'Enter') {
         e.preventDefault();
-        onConfirm();
+        // אם הפוקוס על כפתור ביטול — מבטלים, אחרת מאשרים
+        if (document.activeElement === cancelBtnRef.current) {
+          onCancel();
+        } else {
+          onConfirm();
+        }
         return;
       }
 
