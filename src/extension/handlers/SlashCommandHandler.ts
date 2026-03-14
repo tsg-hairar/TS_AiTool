@@ -139,7 +139,7 @@ export class SlashCommandHandler {
         break;
 
       case 'status':
-        this.showStatus();
+        await this.showStatus();
         break;
 
       case 'doctor':
@@ -155,7 +155,7 @@ export class SlashCommandHandler {
         break;
 
       case 'config':
-        this.showConfig();
+        await this.showConfig();
         break;
 
       default:

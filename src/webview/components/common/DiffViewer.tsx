@@ -220,7 +220,7 @@ function DiffFileCard({ file, viewMode, contextLines, isCollapsed, onToggle }: D
         {/* כפתורי העתקה */}
         <span
           className="diff-copy-btn text-[10px] opacity-0 group-hover:opacity-60 hover:opacity-100 transition-opacity"
-          onClick={(e) => { e.stopPropagation(); handleCopy('new'); }}
+          onClick={(e) => { e.stopPropagation(); void handleCopy('new'); }}
           title={t('diff.copyNew', 'Copy new version')}
         >
           {copiedSide === 'new' ? '\u2705' : '\uD83D\uDCCB'}

@@ -81,7 +81,7 @@ export class ToolExecutionCoordinator {
         this.pendingToolApprovals.set(toolUse.id, { resolve, toolUse });
       }).then((approved) => {
         if (approved) {
-          this.executeToolAndReport(toolUse);
+          void this.executeToolAndReport(toolUse);
         } else {
           this.postMessage({
             type: 'toolResult',
@@ -92,7 +92,7 @@ export class ToolExecutionCoordinator {
         console.error('[ToolExecutionCoordinator] Tool approval error:', err);
       });
     } else {
-      this.executeToolAndReport(toolUse);
+      void this.executeToolAndReport(toolUse);
     }
   }
 

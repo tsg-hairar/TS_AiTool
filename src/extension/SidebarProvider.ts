@@ -322,6 +322,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           await this.handleExportChat(message.payload.format);
           break;
 
+        // --- Pinned Messages ---
+        case 'getPinnedMessages': {
+          const activeConvId = this.conversationStore.getActiveId();
+          if (activeConvId) {
+            const pinned = this.conversationStore.getPinnedMessages(activeConvId);
+            this.postMessage({ type: 'pinnedMessages', payload: pinned });
+          }
+          break;
+        }
+
         // --- טיוטות ושחזור מושב ---
         case 'saveDraft':
           this.chatHandler.saveDraft(
@@ -333,7 +343,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           this.chatHandler.loadDraft(message.payload.conversationId);
           break;
         case 'saveSessionState':
-          this.handleSaveSessionState(message.payload.scrollPosition);
+          void this.handleSaveSessionState(message.payload.scrollPosition);
           break;
         case 'requestSessionRestore':
           this.handleSessionRestore();
@@ -371,13 +381,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   public handleCommand(command: string, arg?: string): void {
     switch (command) {
       case 'newChat':
-        this.chatHandler.newChat();
+        void this.chatHandler.newChat();
         break;
       case 'cancel':
         this.chatHandler.cancelRequest();
         break;
       case 'clearChat':
-        this.chatHandler.clearChat();
+        void this.chatHandler.clearChat();
         break;
       case 'newProject':
         void this.projectHandler.importProject();
@@ -557,7 +567,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       await vscode.window.showTextDocument(doc);
     } else if (action === 'העתק ללוח') {
       await vscode.env.clipboard.writeText(report);
-      vscode.window.showInformationMessage('הדוח הועתק ללוח');
+      void vscode.window.showInformationMessage('הדוח הועתק ללוח');
     }
   }
 
@@ -575,7 +585,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // postMessage — שליחת הודעה ל-Webview
   // -------------------------------------------------
   private postMessage(message: ExtensionToWebviewMessage): void {
-    this._view?.webview.postMessage(message);
+    void this._view?.webview.postMessage(message);
   }
 
   // -------------------------------------------------
@@ -838,7 +848,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // dispose — ניקוי משאבים בסגירה
   // -------------------------------------------------
   public dispose(): void {
-    this.chatHandler.stopAutoSave();
+    this.chatHandler.dispose();
+    this.claudeService.dispose();
   }
 
   // -------------------------------------------------
@@ -885,10 +896,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 // getNonce — יצירת מחרוזת אקראית לאבטחת CSP
 // -------------------------------------------------
 function getNonce(): string {
-  let text = '';
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 32; i++) {
-    text += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return text;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const crypto = require('crypto') as typeof import('crypto');
+  return crypto.randomBytes(24).toString('base64');
 }

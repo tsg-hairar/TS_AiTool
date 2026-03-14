@@ -34,7 +34,7 @@ export function App() {
   // --- סנכרון שפת i18n עם הגדרות המשתמש ---
   useEffect(() => {
     if (state.settings?.language && i18n.language !== state.settings.language) {
-      i18n.changeLanguage(state.settings.language);
+      void i18n.changeLanguage(state.settings.language);
     }
   }, [state.settings?.language, i18n]);
 

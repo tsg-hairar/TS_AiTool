@@ -17,7 +17,7 @@ import enChat from './locales/en/chat.json';
 import enProjects from './locales/en/projects.json';
 import enAgents from './locales/en/agents.json';
 
-i18n.use(initReactI18next).init({
+void i18n.use(initReactI18next).init({
   resources: {
     he: {
       common: heCommon,

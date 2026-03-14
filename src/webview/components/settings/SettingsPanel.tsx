@@ -33,7 +33,7 @@ export function SettingsPanel() {
 
   // עדכון שפה — גם i18n וגם settings
   const changeLanguage = (lang: 'he' | 'en') => {
-    i18n.changeLanguage(lang);
+    void i18n.changeLanguage(lang);
     update({ language: lang });
   };
 

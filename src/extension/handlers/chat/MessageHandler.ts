@@ -138,7 +138,7 @@ export class MessageHandler {
             payload: { messageId: assistantMessageId, token },
           });
         },
-        onComplete: async (fullText, tokenCount, usage?: TokenUsage) => {
+        onComplete: (fullText, tokenCount, usage?: TokenUsage) => {
           const finalMessage: ChatMessage = {
             ...assistantMessage,
             content: fullText,
@@ -146,8 +146,9 @@ export class MessageHandler {
             isStreaming: false,
           };
 
-          await this.conversationStore.addMessage(conversationId, finalMessage);
-          this.markDirty();
+          void this.conversationStore.addMessage(conversationId, finalMessage).then(() => {
+            this.markDirty();
+          });
 
           this.postMessage({
             type: 'streamComplete',
@@ -170,13 +171,22 @@ export class MessageHandler {
           this.toolCoordinator.handleToolUse(toolUse, assistantMessageId);
         },
         onError: (error) => {
+          // Mark the assistant message as no longer streaming
+          this.postMessage({
+            type: 'streamComplete',
+            payload: {
+              messageId: assistantMessageId,
+              fullContent: error.message ? `⚠️ ${error.message}` : '⚠️ שגיאה בחיבור',
+              tokenCount: 0,
+            },
+          });
           this.postMessage({
             type: 'error',
             payload: { message: error.message },
           });
           this.postMessage({
             type: 'statusUpdate',
-            payload: { status: 'error', message: error.message },
+            payload: { status: 'idle' },
           });
         },
         onProgress: (step) => {

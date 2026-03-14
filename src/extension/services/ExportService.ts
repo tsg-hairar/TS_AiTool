@@ -385,7 +385,7 @@ export class ExportService {
     if (!uri) return; // המשתמש ביטל
 
     await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(content));
-    vscode.window.showInformationMessage(`✅ השיחה יוצאה בהצלחה: ${uri.fsPath}`);
+    void vscode.window.showInformationMessage(`✅ השיחה יוצאה בהצלחה: ${uri.fsPath}`);
   }
 
   // -------------------------------------------------
@@ -397,7 +397,7 @@ export class ExportService {
   ): Promise<void> {
     const text = this.toPlainText(conversation, projectName);
     await vscode.env.clipboard.writeText(text);
-    vscode.window.showInformationMessage('✅ השיחה הועתקה ללוח!');
+    void vscode.window.showInformationMessage('✅ השיחה הועתקה ללוח!');
   }
 
   // -------------------------------------------------

@@ -333,30 +333,30 @@ export class GitService {
       // --- Phase 2: Scan staged file contents for secret patterns ---
       const secretContentPatterns: Array<{ name: string; pattern: RegExp }> = [
         // API Keys — generic
-        { name: 'Generic API Key', pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{20,}['"]?/i },
+        { name: 'Generic API Key', pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"]?[A-Za-z0-9_-]{20,}['"]?/i },
         // AWS credentials
         { name: 'AWS Access Key', pattern: /AKIA[0-9A-Z]{16}/ },
         { name: 'AWS Secret Key', pattern: /(?:aws[_-]?secret[_-]?access[_-]?key)\s*[:=]\s*['"]?[A-Za-z0-9/+=]{40}['"]?/i },
         // Private keys
         { name: 'Private Key', pattern: /-----BEGIN\s+(RSA|EC|DSA|OPENSSH|PGP)?\s*PRIVATE KEY-----/ },
         // JWT tokens
-        { name: 'JWT Token', pattern: /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_\-+/=]{10,}/ },
+        { name: 'JWT Token', pattern: /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_+/=-]{10,}/ },
         // OAuth / Bearer tokens
-        { name: 'Bearer Token', pattern: /(?:bearer|token|authorization)\s*[:=]\s*['"]?[A-Za-z0-9_\-\.]{20,}['"]?/i },
+        { name: 'Bearer Token', pattern: /(?:bearer|token|authorization)\s*[:=]\s*['"]?[A-Za-z0-9_.-]{20,}['"]?/i },
         // Connection strings
         { name: 'Connection String', pattern: /(?:mongodb|postgres|mysql|redis|amqp|mssql):\/\/[^\s'"]{10,}/i },
         { name: 'JDBC Connection', pattern: /jdbc:[a-z]+:\/\/[^\s'"]{10,}/i },
         // GitHub / GitLab tokens
         { name: 'GitHub Token', pattern: /(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}/ },
-        { name: 'GitLab Token', pattern: /glpat-[A-Za-z0-9_\-]{20,}/ },
+        { name: 'GitLab Token', pattern: /glpat-[A-Za-z0-9_-]{20,}/ },
         // Slack tokens
-        { name: 'Slack Token', pattern: /xox[bpors]-[A-Za-z0-9\-]{10,}/ },
+        { name: 'Slack Token', pattern: /xox[bpors]-[A-Za-z0-9-]{10,}/ },
         // Google API Key
-        { name: 'Google API Key', pattern: /AIza[0-9A-Za-z_\-]{35}/ },
+        { name: 'Google API Key', pattern: /AIza[0-9A-Za-z_-]{35}/ },
         // Stripe keys
         { name: 'Stripe Key', pattern: /(?:sk|pk)_(?:test|live)_[A-Za-z0-9_]{20,}/ },
         // Azure
-        { name: 'Azure Secret', pattern: /(?:azure[_-]?(?:client|tenant|subscription)[_-]?(?:secret|id|key))\s*[:=]\s*['"]?[A-Za-z0-9_\-]{20,}['"]?/i },
+        { name: 'Azure Secret', pattern: /(?:azure[_-]?(?:client|tenant|subscription)[_-]?(?:secret|id|key))\s*[:=]\s*['"]?[A-Za-z0-9_-]{20,}['"]?/i },
         // Generic secret/password assignment
         { name: 'Hardcoded Secret', pattern: /(?:password|secret|passwd|pwd)\s*[:=]\s*['"][^'"]{8,}['"]/i },
       ];

@@ -26,21 +26,14 @@ export function ToolPermissionDialog() {
   const { state, sendMessage } = useApp();
   const { t } = useTranslation();
 
-  // אם אין בקשות ממתינות — לא מציגים כלום
-  if (state.pendingToolPermissions.length === 0) return null;
-
-  // מציגים את הבקשה הראשונה בתור
-  const permission = state.pendingToolPermissions[0];
-  const toolMeta = TOOL_ICONS[permission.toolName] ?? { icon: '🔧', danger: false };
-  const toolLabel = t(`toolPermission.tools.${permission.toolName}`, { defaultValue: permission.toolName });
-
-  // הכנת תיאור הפרמטרים
-  const inputEntries = Object.entries(permission.input);
-
   // --- Focus trap for dialog ---
   const dialogRef = useRef<HTMLDivElement>(null);
 
+  // מציגים את הבקשה הראשונה בתור
+  const permission = state.pendingToolPermissions[0];
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!permission) return;
     if (e.key === 'Escape') {
       sendMessage({ type: 'denyToolUse', payload: { toolUseId: permission.toolUseId } });
       return;
@@ -66,9 +59,10 @@ export function ToolPermissionDialog() {
         first.focus();
       }
     }
-  }, [permission.toolUseId, sendMessage]);
+  }, [permission, sendMessage]);
 
   useEffect(() => {
+    if (!permission) return;
     // Focus the dialog when it opens
     const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -76,7 +70,16 @@ export function ToolPermissionDialog() {
     if (focusable && focusable.length > 0) {
       focusable[focusable.length - 1].focus(); // Focus approve button
     }
-  }, [permission.toolUseId]);
+  }, [permission]);
+
+  // אם אין בקשות ממתינות — לא מציגים כלום
+  if (state.pendingToolPermissions.length === 0 || !permission) return null;
+
+  const toolMeta = TOOL_ICONS[permission.toolName] ?? { icon: '🔧', danger: false };
+  const toolLabel = t(`toolPermission.tools.${permission.toolName}`, { defaultValue: permission.toolName });
+
+  // הכנת תיאור הפרמטרים
+  const inputEntries = Object.entries(permission.input);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-backdrop-in" role="presentation">

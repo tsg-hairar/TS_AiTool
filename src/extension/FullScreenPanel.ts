@@ -133,7 +133,7 @@ export class FullScreenPanel {
     // --- אתחול Handlers ---
     // כל פאנל מקבל סט Handlers עצמאי עם postMessage משלו
     const postMessage = (msg: ExtensionToWebviewMessage) => {
-      this.panel.webview.postMessage(msg);
+      void this.panel.webview.postMessage(msg);
     };
 
     this.chatHandler = new ChatHandler(context, settingsService, conversationStore, postMessage, this.claudeService);
@@ -161,7 +161,8 @@ export class FullScreenPanel {
     // כשנסגר — מסירים מהרשימה + ניקוי משאבים
     this.panel.onDidDispose(
       () => {
-        this.chatHandler.stopAutoSave();
+        this.chatHandler.dispose();
+        this.claudeService.dispose();
         FullScreenPanel.panels = FullScreenPanel.panels.filter((p) => p !== this);
       },
       null,
@@ -198,10 +199,10 @@ export class FullScreenPanel {
           await this.chatHandler.deleteConversation(message.payload.conversationId);
           break;
         case 'toggleBookmark':
-          this.chatHandler.toggleBookmark(message.payload.messageId);
+          await this.chatHandler.toggleBookmark(message.payload.messageId);
           break;
         case 'togglePin':
-          this.chatHandler.togglePin(message.payload.messageId);
+          await this.chatHandler.togglePin(message.payload.messageId);
           break;
 
         // --- פרויקטים ---
@@ -310,28 +311,58 @@ export class FullScreenPanel {
         // --- התראות ---
         case 'dismissNotification':
           this.notificationService.dismissNotification(message.payload.notificationId);
-          this.panel.webview.postMessage({
+          void this.panel.webview.postMessage({
             type: 'unreadCount',
             payload: { count: this.notificationService.getUnreadCount() },
           });
           break;
         case 'clearNotifications':
           this.notificationService.clearAll();
-          this.panel.webview.postMessage({ type: 'notificationsCleared' });
-          this.panel.webview.postMessage({
+          void this.panel.webview.postMessage({ type: 'notificationsCleared' });
+          void this.panel.webview.postMessage({
             type: 'unreadCount',
             payload: { count: 0 },
           });
           break;
         case 'getNotifications':
-          this.panel.webview.postMessage({
+          void this.panel.webview.postMessage({
             type: 'notificationList',
             payload: this.notificationService.getAll(),
           });
-          this.panel.webview.postMessage({
+          void this.panel.webview.postMessage({
             type: 'unreadCount',
             payload: { count: this.notificationService.getUnreadCount() },
           });
+          break;
+
+        // --- Diff Content ---
+        case 'getDiffContent':
+          await this.gitHandler.getDiffContent(
+            message.payload?.filePath,
+            message.payload?.staged,
+          );
+          break;
+
+        // --- טיוטות ושחזור מושב ---
+        case 'saveDraft':
+          this.chatHandler.saveDraft(
+            message.payload.conversationId,
+            message.payload.text,
+          );
+          break;
+        case 'loadDraft':
+          this.chatHandler.loadDraft(message.payload.conversationId);
+          break;
+        case 'saveSessionState':
+          // Full-screen panels don't persist session state
+          break;
+        case 'requestSessionRestore':
+          // Full-screen panels don't restore session state
+          break;
+
+        // --- Pinned Messages ---
+        case 'getPinnedMessages':
+          // Handled client-side via state.messages.filter(m => m.isPinned)
           break;
 
         // --- Terminal ---
@@ -359,7 +390,7 @@ export class FullScreenPanel {
       }
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'error',
         payload: { message: errMsg },
       });
@@ -370,7 +401,7 @@ export class FullScreenPanel {
   private async sendInitialData(): Promise<void> {
     // שולחים סטטוס onboarding
     const onboardingCompleted = this.context.globalState.get<boolean>('tsAiTool.onboardingCompleted', false);
-    this.panel.webview.postMessage({ type: 'onboardingStatus', payload: { completed: onboardingCompleted } });
+    void this.panel.webview.postMessage({ type: 'onboardingStatus', payload: { completed: onboardingCompleted } });
 
     void this.settingsHandler.getSettings();
     await this.projectHandler.getProjects();
@@ -381,16 +412,16 @@ export class FullScreenPanel {
       const existing = this.projectManager.getProjects();
       const project = existing.find((p) => p.path === workspaceFolder.uri.fsPath);
       if (project) {
-        this.panel.webview.postMessage({ type: 'projectOpened', payload: project });
-        this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent());
+        void this.panel.webview.postMessage({ type: 'projectOpened', payload: project });
+        this.chatHandler.setContext(project.id, this.agentHandler.getCurrentAgent(), project.path);
       } else {
         try {
           const newProject = await this.projectManager.createProject(
             workspaceFolder.name, workspaceFolder.uri.fsPath,
           );
-          this.panel.webview.postMessage({ type: 'projectCreated', payload: newProject });
-          this.panel.webview.postMessage({ type: 'projectOpened', payload: newProject });
-          this.chatHandler.setContext(newProject.id, this.agentHandler.getCurrentAgent());
+          void this.panel.webview.postMessage({ type: 'projectCreated', payload: newProject });
+          void this.panel.webview.postMessage({ type: 'projectOpened', payload: newProject });
+          this.chatHandler.setContext(newProject.id, this.agentHandler.getCurrentAgent(), newProject.path);
           await this.projectHandler.getProjects();
         } catch { /* שקט */ }
       }
@@ -409,7 +440,7 @@ export class FullScreenPanel {
 
     const parts = command.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
     if (parts.length === 0) {
-      this.panel.webview.postMessage({ type: 'terminalOutput', payload: { output: 'Error: Empty command', exitCode: 1 } });
+      void this.panel.webview.postMessage({ type: 'terminalOutput', payload: { output: 'Error: Empty command', exitCode: 1 } });
       return;
     }
     const executable = parts[0]!.replace(/^["']|["']$/g, '');
@@ -423,14 +454,14 @@ export class FullScreenPanel {
     proc.stderr?.on('data', (data: Buffer) => { stderr += data.toString(); });
 
     proc.on('close', (code) => {
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'terminalOutput',
         payload: { output: stdout || stderr || '(no output)', exitCode: code ?? 0 },
       });
     });
 
     proc.on('error', (err) => {
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'terminalOutput',
         payload: { output: `Error: ${err.message}`, exitCode: 1 },
       });
@@ -442,7 +473,7 @@ export class FullScreenPanel {
   // -------------------------------------------------
   private handleSearchMessages(query: string, scope?: 'current' | 'all'): void {
     if (!query.trim()) {
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'searchResults',
         payload: { matches: [], total: 0, query },
       });
@@ -455,7 +486,7 @@ export class FullScreenPanel {
 
     const matches = this.conversationStore.search(query, projectId);
 
-    this.panel.webview.postMessage({
+    void this.panel.webview.postMessage({
       type: 'searchResults',
       payload: {
         matches: matches.slice(0, 100),
@@ -471,7 +502,7 @@ export class FullScreenPanel {
   private async handleExportChat(format: 'markdown' | 'html' | 'clipboard' | 'json'): Promise<void> {
     const activeId = this.conversationStore.getActiveId();
     if (!activeId) {
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'error',
         payload: { message: 'אין שיחה פעילה לייצוא' },
       });
@@ -480,7 +511,7 @@ export class FullScreenPanel {
 
     const conversation = this.conversationStore.get(activeId);
     if (!conversation || conversation.messages.length === 0) {
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'error',
         payload: { message: 'השיחה ריקה — אין מה לייצא' },
       });
@@ -495,7 +526,7 @@ export class FullScreenPanel {
       await this.exportService.export(conversation, format, project?.name);
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'שגיאה בייצוא';
-      this.panel.webview.postMessage({
+      void this.panel.webview.postMessage({
         type: 'error',
         payload: { message: errMsg },
       });
@@ -508,10 +539,10 @@ export class FullScreenPanel {
   private async handleGetFileTree(projectPath: string): Promise<void> {
     try {
       const tree = await this.fileTreeService.getFileTree(projectPath);
-      this.panel.webview.postMessage({ type: 'fileTree', payload: tree });
+      void this.panel.webview.postMessage({ type: 'fileTree', payload: tree });
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Failed to scan file tree';
-      this.panel.webview.postMessage({ type: 'error', payload: { message: errMsg } });
+      void this.panel.webview.postMessage({ type: 'error', payload: { message: errMsg } });
     }
   }
 
@@ -524,7 +555,7 @@ export class FullScreenPanel {
       await vscode.commands.executeCommand('vscode.open', uri);
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Failed to open file';
-      this.panel.webview.postMessage({ type: 'error', payload: { message: errMsg } });
+      void this.panel.webview.postMessage({ type: 'error', payload: { message: errMsg } });
     }
   }
 
@@ -572,10 +603,7 @@ export class FullScreenPanel {
 
 // יצירת Nonce אקראי
 function getNonce(): string {
-  let text = '';
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 32; i++) {
-    text += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return text;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const crypto = require('crypto') as typeof import('crypto');
+  return crypto.randomBytes(24).toString('base64');
 }

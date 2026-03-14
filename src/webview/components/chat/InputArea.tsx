@@ -37,10 +37,11 @@ export function InputArea() {
       }
       draftTimerRef.current = setTimeout(() => {
         // שליחה ל-Extension לשמירה ב-globalState
-        // משתמשים בשיחה האחרונה (הפעילה) או מזהה כללי
-        const conversationId = state.conversations.length > 0
-          ? state.conversations[state.conversations.length - 1]?.id
-          : 'default';
+        // Find the most recently updated conversation (= the active one)
+        const sortedConvs = [...state.conversations].sort(
+          (a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime(),
+        );
+        const conversationId = sortedConvs[0]?.id ?? 'default';
         if (conversationId && text.trim()) {
           sendMessage({
             type: 'saveDraft',

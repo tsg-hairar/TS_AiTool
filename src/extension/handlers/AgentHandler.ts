@@ -632,7 +632,7 @@ export class AgentHandler {
           input: Record<string, unknown>;
         }> = [];
 
-        this.claudeService.sendMessage(
+        void this.claudeService.sendMessage(
           conversationMessages,
           systemPrompt,
           settings.model,
@@ -660,7 +660,7 @@ export class AgentHandler {
                 });
 
                 // הפעלת כל הכלים והחזרת תוצאות ל-Claude
-                this.executeToolsAndContinue(
+                void this.executeToolsAndContinue(
                   pendingToolUses,
                   conversationMessages,
                   msgId,

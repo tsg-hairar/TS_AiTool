@@ -133,7 +133,7 @@ export const MessageBubble = React.memo(function MessageBubble({
             {/* העתקה */}
             <button
               className="btn-ghost text-[10px] transition-all duration-200 hover:scale-110"
-              onClick={() => navigator.clipboard.writeText(message.content)}
+              onClick={() => void navigator.clipboard.writeText(message.content)}
               title={t('message.copy')}
               aria-label={t('message.copyAria')}
               style={{ borderRadius: 'var(--radius-sm)' }}

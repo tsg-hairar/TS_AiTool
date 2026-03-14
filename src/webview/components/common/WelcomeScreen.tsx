@@ -234,7 +234,7 @@ export function WelcomeScreen() {
   const handleLangChange = useCallback(
     (lang: 'he' | 'en') => {
       setSelectedLang(lang);
-      i18n.changeLanguage(lang);
+      void i18n.changeLanguage(lang);
       sendMessage({ type: 'updateSettings', payload: { language: lang } });
     },
     [i18n, sendMessage],

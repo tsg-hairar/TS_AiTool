@@ -166,7 +166,7 @@ export function activate(context: vscode.ExtensionContext): void {
         await vscode.workspace.getConfiguration('tsAiTool').update('model', selected.value, vscode.ConfigurationTarget.Global);
         sidebarProvider.handleCommand('switchModel', selected.value);
         updateModelStatusBar(selected.value);
-        vscode.window.showInformationMessage(`מודל שונה ל-${selected.label}`);
+        void vscode.window.showInformationMessage(`מודל שונה ל-${selected.label}`);
       }
     }],
 
@@ -196,7 +196,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!editor) { return; }
       const selection = editor.document.getText(editor.selection);
       if (!selection) {
-        vscode.window.showWarningMessage('אנא בחר קוד קודם');
+        void vscode.window.showWarningMessage('אנא בחר קוד קודם');
         return;
       }
       const fileName = editor.document.fileName.split(/[\\/]/).pop() || '';
@@ -215,7 +215,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!editor) { return; }
       const selection = editor.document.getText(editor.selection);
       if (!selection) {
-        vscode.window.showWarningMessage('אנא בחר קוד קודם');
+        void vscode.window.showWarningMessage('אנא בחר קוד קודם');
         return;
       }
       const fileName = editor.document.fileName.split(/[\\/]/).pop() || '';
@@ -234,7 +234,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!editor) { return; }
       const selection = editor.document.getText(editor.selection);
       if (!selection) {
-        vscode.window.showWarningMessage('אנא בחר קוד קודם');
+        void vscode.window.showWarningMessage('אנא בחר קוד קודם');
         return;
       }
       const fileName = editor.document.fileName.split(/[\\/]/).pop() || '';
@@ -253,7 +253,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!editor) { return; }
       const selection = editor.document.getText(editor.selection);
       if (!selection) {
-        vscode.window.showWarningMessage('אנא בחר קוד קודם');
+        void vscode.window.showWarningMessage('אנא בחר קוד קודם');
         return;
       }
       const fileName = editor.document.fileName.split(/[\\/]/).pop() || '';

@@ -120,7 +120,7 @@ export class AnalyticsService {
     this.data.totalSessions += 1;
     this.data.currentSessionStart = new Date().toISOString();
     this.data.currentSessionMessages = 0;
-    this.save();
+    void this.save();
   }
 
   // -------------------------------------------------

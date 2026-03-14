@@ -197,25 +197,27 @@ export function attachCopyHandlers(container: HTMLElement): void {
     if (btn.dataset.listenerAttached) return;
     btn.dataset.listenerAttached = 'true';
 
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
       const encoded = btn.dataset.code;
       if (!encoded) return;
 
       try {
         const code = decodeURIComponent(escape(atob(encoded)));
-        await navigator.clipboard.writeText(code);
-
-        // Visual feedback
-        const label = btn.querySelector('.code-copy-label');
-        if (label) {
-          const original = label.textContent;
-          label.textContent = 'Copied!';
-          btn.classList.add('copied');
-          setTimeout(() => {
-            label.textContent = original;
-            btn.classList.remove('copied');
-          }, 2000);
-        }
+        void navigator.clipboard.writeText(code).then(() => {
+          // Visual feedback
+          const label = btn.querySelector('.code-copy-label');
+          if (label) {
+            const original = label.textContent;
+            label.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              label.textContent = original;
+              btn.classList.remove('copied');
+            }, 2000);
+          }
+        }).catch(() => {
+          // Clipboard API may fail in some environments
+        });
       } catch {
         // Clipboard API may fail in some environments
       }

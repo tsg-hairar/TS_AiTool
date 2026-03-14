@@ -29,7 +29,7 @@ export function getDirection(lang: string): 'rtl' | 'ltr' {
 // -------------------------------------------------
 // אתחול i18next
 // -------------------------------------------------
-i18n.use(initReactI18next).init({
+void i18n.use(initReactI18next).init({
   resources: {
     he: { translation: he },
     en: { translation: en },

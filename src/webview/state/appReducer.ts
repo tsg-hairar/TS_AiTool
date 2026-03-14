@@ -172,9 +172,15 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_INPUT':
       return { ...state, inputText: action.payload };
 
-    case 'SET_STATUS':
+    case 'SET_STATUS': {
+      // When status returns to idle — clear any stuck streaming messages
+      const shouldClearStreaming = action.payload.status === 'idle' || action.payload.status === 'error';
+      const updatedMessages = shouldClearStreaming
+        ? state.messages.map(m => m.isStreaming ? { ...m, isStreaming: false } : m)
+        : state.messages;
       return {
         ...state,
+        messages: updatedMessages,
         status: action.payload.status,
         // אם הסטטוס הוא error — שומרים ב-errorMessage
         // אחרת — שומרים ב-statusMessage (progress/info)
@@ -185,6 +191,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           ? (action.payload.message ?? null)
           : null,
       };
+    }
 
     // --- הגדרות ---
     case 'SET_SETTINGS':

@@ -93,12 +93,10 @@ export class ConversationManager {
       clearTimeout(this.draftSaveTimer);
     }
 
-    this.draftSaveTimer = setTimeout(async () => {
-      try {
-        await this.conversationStore.saveDraft(conversationId, text);
-      } catch (err) {
+    this.draftSaveTimer = setTimeout(() => {
+      this.conversationStore.saveDraft(conversationId, text).catch((err) => {
         console.error('[ConversationManager] Failed to save draft:', err);
-      }
+      });
     }, 3_000);
   }
 

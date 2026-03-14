@@ -251,7 +251,7 @@ describe('ClaudeService', () => {
       const callbacks = createMockCallbacks();
 
       // Simulate accumulated text from prior streaming
-      let accumulated = 'I streamed this already';
+      const accumulated = 'I streamed this already';
       // @ts-expect-error - accessing private method for testing
       service.handleCliEvent(
         {
