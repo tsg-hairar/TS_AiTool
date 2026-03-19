@@ -72,7 +72,9 @@
     "sendAria": "שלח הודעה",
     "slashHint": "/help — רשימת פקודות | /review — סקירת קוד | /fix — תיקון באגים",
     "removeImageAria": "הסר תמונה {{index}}",
-    "imageTooLarge": "התמונה {{name}} גדולה מדי ({{size}}MB). מקסימום 5MB."
+    "imageTooLarge": "התמונה {{name}} גדולה מדי ({{size}}MB). מקסימום 5MB.",
+    "attachImage": "צרף תמונה",
+    "attachImageAria": "צרף תמונה מהמחשב"
   },
 
   "message": {

@@ -24,6 +24,7 @@ export function InputArea() {
   const { state, dispatch, sendMessage } = useApp();
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // טיימר debounce לשמירת טיוטה
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -161,6 +162,44 @@ export function InputArea() {
     [dispatch, t],
   );
 
+  // -------------------------------------------------
+  // העלאת תמונה מכפתור
+  // -------------------------------------------------
+  const handleFileUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files ?? []);
+      const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+
+        if (file.size > MAX_IMAGE_SIZE) {
+          dispatch({
+            type: 'SET_ERROR',
+            payload: t('input.imageTooLarge', {
+              name: file.name,
+              size: (file.size / 1024 / 1024).toFixed(1),
+            }),
+          });
+          continue;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          dispatch({ type: 'ADD_IMAGE', payload: base64 });
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // ניקוי ה-input כדי לאפשר העלאה חוזרת של אותו קובץ
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [dispatch, t],
+  );
+
   const isBusy = state.status === 'thinking' || state.status === 'streaming';
 
   return (
@@ -256,6 +295,31 @@ export function InputArea() {
             </button>
           ) : (
             <>
+              {/* העלאת תמונה */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleFileUpload}
+                aria-hidden="true"
+                tabIndex={-1}
+                style={{ display: 'none' }}
+              />
+              <button
+                className="btn-ghost px-2 py-1.5 transition-all duration-200 hover:scale-110"
+                onClick={() => fileInputRef.current?.click()}
+                title={t('input.attachImage')}
+                aria-label={t('input.attachImageAria')}
+                style={{
+                  borderRadius: 'var(--radius-md)',
+                  opacity: 0.7,
+                }}
+              >
+                📎
+              </button>
+
               {/* שליחה */}
               <button
                 className="btn-primary px-3 py-1.5 transition-all duration-200"

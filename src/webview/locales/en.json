@@ -72,7 +72,9 @@
     "sendAria": "Send message",
     "slashHint": "/help — Command list | /review — Code review | /fix — Fix bugs",
     "removeImageAria": "Remove image {{index}}",
-    "imageTooLarge": "Image {{name}} is too large ({{size}}MB). Maximum 5MB."
+    "imageTooLarge": "Image {{name}} is too large ({{size}}MB). Maximum 5MB.",
+    "attachImage": "Attach image",
+    "attachImageAria": "Attach image from computer"
   },
 
   "message": {
