@@ -359,55 +359,35 @@ export class ClaudeService {
       };
     }
 
-    // --- תמונות: CLI לא תומך בתמונות, צריך API ---
-    const hasImages = messages.some((m) => m.images && m.images.length > 0);
-
+    // --- בחירת מצב שליחה ---
     if (this.mode === 'api') {
       return this.sendMessageViaApi(messages, systemPrompt, model, maxTokens, callbacks);
     }
 
-    // אם יש תמונות ואנחנו במצב CLI — ננסה לעבור ל-API אוטומטית
-    if (hasImages) {
-      if (this.apiClient) {
-        // יש API client מוגדר — נשתמש בו לשליחת הודעה עם תמונות
-        callbacks.onProgress?.('📸 תמונות מזוהות — שולח דרך API...');
-        return this.sendMessageViaApi(messages, systemPrompt, model, maxTokens, callbacks);
-      }
-
-      // אין API key — נודיע למשתמש
-      callbacks.onError(
-        new Error(
-          '📸 העלאת תמונות דורשת API Key.\n\n' +
-          'Claude CLI לא תומך בשליחת תמונות.\n' +
-          'כדי להשתמש בתמונות:\n' +
-          '1. לך ל-Settings (⚙️)\n' +
-          '2. הוסף Anthropic API Key\n' +
-          '3. נסה שוב\n\n' +
-          'ההודעה הטקסטואלית תישלח ללא התמונות.',
-        ),
-      );
-      // שולחים את ההודעה בלי תמונות דרך CLI
-      const messagesWithoutImages = messages.map((m) => ({
-        ...m,
-        images: undefined,
-      }));
-      return this.sendMessageViaCli(messagesWithoutImages, systemPrompt, callbacks);
-    }
-
+    // CLI mode — תומך בתמונות דרך --input-format stream-json!
     return this.sendMessageViaCli(messages, systemPrompt, callbacks);
   }
 
   // =================================================
   // CLI MODE — שליחה דרך Claude Code CLI
   // =================================================
-  // מה שעובד (נבדק!):
-  //   spawn(process.execPath, [cli.js, '-p', prompt,
-  //     '--output-format', 'stream-json', '--verbose'])
+  // שני מצבי שליחה:
   //
-  // חובה:
+  // A) טקסט בלבד (מהיר):
+  //   spawn(node, [cli.js, '-p', prompt,
+  //     '--output-format', 'stream-json', '--verbose'])
+  //   + stdin.end() מיד
+  //
+  // B) עם תמונות (stream-json input):
+  //   spawn(node, [cli.js, '-p',
+  //     '--input-format', 'stream-json',
+  //     '--output-format', 'stream-json', '--verbose'])
+  //   + כותבים JSON לתוך stdin עם image content blocks
+  //   + stdin.end() אחרי הכתיבה
+  //
+  // חובה בשניהם:
   //   1. הרצה ישירה דרך node (לא shell: true / claude.cmd)
-  //   2. stdin.end() — לסגור stdin מיד
-  //   3. מחיקת CLAUDECODE + CLAUDE_CODE_ENTRYPOINT מ-env
+  //   2. מחיקת CLAUDECODE + CLAUDE_CODE_ENTRYPOINT מ-env
   //
   // פורמט פלט (JSON שורה-שורה):
   //   {"type": "system", ...}      — אתחול
@@ -426,6 +406,9 @@ export class ClaudeService {
       callbacks.onError(new Error('No user message found'));
       return;
     }
+
+    // --- בדיקה אם יש תמונות ---
+    const hasImages = lastUserMessage.images && lastUserMessage.images.length > 0;
 
     // --- בניית הקשר שיחה עם חיסכון בטוקנים ---
     // אסטרטגיה: הודעות אחרונות בפירוט מלא,
@@ -493,37 +476,33 @@ export class ClaudeService {
       }
     });
 
-    // --- הרצת claude CLI ---
-    // ישירות דרך node (לא shell:true!) כדי לעקוף בעיית claude.cmd
     // --- הרשאות CLI: מבוסס על הגדרת המשתמש ---
-    // permissionPreset (מוגדר ב-Settings):
-    //   "full"         → --dangerously-skip-permissions (אישור אוטומטי לכל הכלים)
-    //   "normal"       → בלי הדגל — CLI ישתמש בהרשאות ברירת מחדל
-    //   "conservative" → בלי הדגל — CLI ישתמש בהרשאות ברירת מחדל
-    //
-    // הערה: stdin נסגר (stdin.end()) כדי למנוע תקיעה.
-    // במצב normal/conservative, ה-CLI עלול לחכות לאישור ולהיתקע.
-    // כדי למנוע תקיעה בלי לדלג על הרשאות, מוסיפים timeout
-    // וה-ToolExecutor אוכף הגבלות נוספות מצידו.
     const permissionPreset = vscode.workspace
       .getConfiguration('tsAiTool')
       .get<string>('permissionPreset', 'normal');
 
-    const args = [
-      cliJs,
-      '-p', userPrompt,
-      '--output-format', 'stream-json',
-      '--verbose',
-    ];
+    // --- בניית arguments ---
+    // אם יש תמונות: משתמשים ב-stream-json input (stdin)
+    // אם אין תמונות: משתמשים ב--p (prompt בשורת הפקודה)
+    const args: string[] = [cliJs];
+
+    if (hasImages) {
+      // מצב תמונות: stream-json input דרך stdin
+      args.push('-p'); // print mode (non-interactive)
+      args.push('--input-format', 'stream-json');
+      args.push('--output-format', 'stream-json');
+      args.push('--verbose');
+      callbacks.onProgress?.('📸 שולח הודעה עם תמונות...');
+    } else {
+      // מצב טקסט רגיל: prompt בשורת הפקודה
+      args.push('-p', userPrompt);
+      args.push('--output-format', 'stream-json');
+      args.push('--verbose');
+    }
 
     if (permissionPreset === 'full') {
-      // המשתמש בחר במפורש "Full (Auto-approve all)" — מדלג על הרשאות
       args.push('--dangerously-skip-permissions');
     }
-    // במצב normal / conservative — לא מוסיפים את הדגל.
-    // ה-CLI ישתמש בהרשאות ברירת מחדל שלו.
-    // אם ה-CLI נתקע בגלל שמחכה לאישור (stdin סגור),
-    // ה-idle timeout (300 שניות) יתפוס את זה ויציג הודעת שגיאה מתאימה.
 
     // הוספת system prompt אם יש
     if (systemPrompt) {
@@ -531,23 +510,20 @@ export class ClaudeService {
     }
 
     // --- CWD: העברת תיקיית הפרויקט ---
-    // בלי זה Claude לא יודע על איזה פרויקט עובדים!
     const cwd = this.workingDirectory || undefined;
 
     // --- מציאת node.exe אמין ---
-    // process.execPath ב-VS Code = Electron, לא node!
     const nodeExe = await this.findNodeExe();
 
-    // --- דיאגנוסטיקה: שומרים לשימוש ב-error messages ---
-    const debugInfo = `node: ${nodeExe} | cwd: ${cwd || 'none'} | prompt: ${userPrompt.length} chars`;
+    // --- דיאגנוסטיקה ---
+    const debugInfo = `node: ${nodeExe} | cwd: ${cwd || 'none'} | prompt: ${userPrompt.length} chars | images: ${hasImages ? lastUserMessage.images!.length : 0}`;
     callbacks.onProgress?.(`מפעיל CLI... (${path.basename(nodeExe)})`);
 
     try {
       this.currentCliProcess = spawn(nodeExe, args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: cleanEnv,
-        cwd, // תיקיית העבודה
-        // windowsHide: true — חבוי (לא פותח חלון CMD)
+        cwd,
         windowsHide: true,
       });
     } catch (error) {
@@ -561,8 +537,47 @@ export class ClaudeService {
       return;
     }
 
-    // חובה! סגירת stdin — בלי זה Claude CLI נתקע
-    cliProcess.stdin?.end();
+    // --- שליחת הודעה דרך stdin (עם תמונות) או סגירת stdin מיד ---
+    if (hasImages && cliProcess.stdin) {
+      // בניית הודעת stream-json עם image content blocks
+      const contentBlocks: Array<Record<string, unknown>> = [];
+
+      // הוספת תמונות כ-content blocks
+      for (const img of lastUserMessage.images!) {
+        contentBlocks.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: img.mimeType,
+            data: img.data,
+          },
+        });
+      }
+
+      // הוספת טקסט (כולל conversation context)
+      if (userPrompt) {
+        contentBlocks.push({
+          type: 'text',
+          text: userPrompt,
+        });
+      }
+
+      // שליחת הודעת user ב-stream-json format
+      const stdinMessage = JSON.stringify({
+        type: 'user',
+        message: {
+          content: contentBlocks,
+        },
+      });
+
+      cliProcess.stdin.write(stdinMessage + '\n', 'utf-8', () => {
+        // סוגרים stdin אחרי הכתיבה — CLI יתחיל לעבד
+        cliProcess.stdin?.end();
+      });
+    } else {
+      // מצב טקסט רגיל — סוגרים stdin מיד
+      cliProcess.stdin?.end();
+    }
 
     // --- משתנים ---
     let fullText = '';
