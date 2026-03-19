@@ -566,6 +566,7 @@ export class ClaudeService {
       const stdinMessage = JSON.stringify({
         type: 'user',
         message: {
+          role: 'user',
           content: contentBlocks,
         },
       });
