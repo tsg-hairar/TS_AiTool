@@ -359,9 +359,41 @@ export class ClaudeService {
       };
     }
 
+    // --- תמונות: CLI לא תומך בתמונות, צריך API ---
+    const hasImages = messages.some((m) => m.images && m.images.length > 0);
+
     if (this.mode === 'api') {
       return this.sendMessageViaApi(messages, systemPrompt, model, maxTokens, callbacks);
     }
+
+    // אם יש תמונות ואנחנו במצב CLI — ננסה לעבור ל-API אוטומטית
+    if (hasImages) {
+      if (this.apiClient) {
+        // יש API client מוגדר — נשתמש בו לשליחת הודעה עם תמונות
+        callbacks.onProgress?.('📸 תמונות מזוהות — שולח דרך API...');
+        return this.sendMessageViaApi(messages, systemPrompt, model, maxTokens, callbacks);
+      }
+
+      // אין API key — נודיע למשתמש
+      callbacks.onError(
+        new Error(
+          '📸 העלאת תמונות דורשת API Key.\n\n' +
+          'Claude CLI לא תומך בשליחת תמונות.\n' +
+          'כדי להשתמש בתמונות:\n' +
+          '1. לך ל-Settings (⚙️)\n' +
+          '2. הוסף Anthropic API Key\n' +
+          '3. נסה שוב\n\n' +
+          'ההודעה הטקסטואלית תישלח ללא התמונות.',
+        ),
+      );
+      // שולחים את ההודעה בלי תמונות דרך CLI
+      const messagesWithoutImages = messages.map((m) => ({
+        ...m,
+        images: undefined,
+      }));
+      return this.sendMessageViaCli(messagesWithoutImages, systemPrompt, callbacks);
+    }
+
     return this.sendMessageViaCli(messages, systemPrompt, callbacks);
   }
 

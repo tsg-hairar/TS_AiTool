@@ -68,7 +68,15 @@ export class MessageHandler {
       timestamp: new Date().toISOString(),
       images: images?.map((data, i) => {
         const mimeType = detectMimeTypeFromBase64(data);
-        const ext = mimeType.split('/')[1] === 'jpeg' ? 'jpg' : mimeType.split('/')[1];
+        // מפה MIME type ל-extension נכון (כולל svg+xml → svg)
+        const extMap: Record<string, string> = {
+          'image/jpeg': 'jpg',
+          'image/png': 'png',
+          'image/gif': 'gif',
+          'image/webp': 'webp',
+          'image/svg+xml': 'svg',
+        };
+        const ext = extMap[mimeType] || 'png';
         return {
           id: `img-${generateId()}`,
           name: `image-${i}.${ext}`,
